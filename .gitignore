@@ -1,0 +1,31 @@
+resources/
+temp/
+
+# Real config file containing secrets - NEVER commit this
+config/insight-harbor-config.json
+
+# Local ingestion outputs and PAX checkpoint files
+ingestion/output/
+ingestion/checkpoints/
+
+# Python artifacts
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
+# Environment files
+.env
+.env.*
+
+# Azure Functions local settings (contains storage keys)
+dashboard/api/local.settings.json
+
+# Power BI local working files
+dashboard/powerbi/*.pbix
+
+# OS artifacts
+.DS_Store
+Thumbs.db

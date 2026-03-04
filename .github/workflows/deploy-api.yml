@@ -1,0 +1,44 @@
+# Insight Harbor — Deploy Function App to Azure Functions
+# Triggers on pushes to main that change the API code.
+# Uses Azure Functions GitHub Action with Python remote build.
+
+name: Deploy API (Function App)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'dashboard/api/**'
+  workflow_dispatch:  # Manual trigger
+
+env:
+  AZURE_FUNCTIONAPP_NAME: ih-api-poc01
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy Function App
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        working-directory: dashboard/api
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt --target=".python_packages/lib/site-packages"
+
+      - name: Deploy to Azure Functions
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
+          package: dashboard/api
+          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
+          scm-do-build-during-deployment: true
+          enable-oryx-build: true

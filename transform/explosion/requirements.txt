@@ -1,0 +1,7 @@
+# Python dependencies for Insight Harbor transform/explosion layer
+#
+# Required:
+azure-storage-blob>=12.0.0
+
+# Optional but strongly recommended (~5-10x faster JSON parsing in the explosion processor):
+# orjson>=3.9.0

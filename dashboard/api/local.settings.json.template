@@ -1,0 +1,14 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "IH_ADLS_ACCOUNT_NAME": "ihstoragepoc01",
+    "IH_ADLS_ACCOUNT_KEY": "__REPLACE_WITH_STORAGE_KEY__",
+    "IH_ADLS_CONTAINER": "insight-harbor"
+  },
+  "Host": {
+    "LocalHttpPort": 7071,
+    "CORS": "*"
+  }
+}

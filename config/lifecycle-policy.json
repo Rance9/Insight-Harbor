@@ -1,0 +1,67 @@
+{
+  "rules": [
+    {
+      "enabled": true,
+      "name": "bronze-tier-to-cool-then-delete",
+      "type": "Lifecycle",
+      "definition": {
+        "actions": {
+          "baseBlob": {
+            "tierToCool": {
+              "daysAfterModificationGreaterThan": 30
+            },
+            "delete": {
+              "daysAfterModificationGreaterThan": 90
+            }
+          }
+        },
+        "filters": {
+          "blobTypes": ["blockBlob"],
+          "prefixMatch": ["insight-harbor/bronze/"]
+        }
+      }
+    },
+    {
+      "enabled": true,
+      "name": "silver-tier-to-cool-then-archive",
+      "type": "Lifecycle",
+      "definition": {
+        "actions": {
+          "baseBlob": {
+            "tierToCool": {
+              "daysAfterModificationGreaterThan": 60
+            },
+            "tierToArchive": {
+              "daysAfterModificationGreaterThan": 180
+            },
+            "delete": {
+              "daysAfterModificationGreaterThan": 365
+            }
+          }
+        },
+        "filters": {
+          "blobTypes": ["blockBlob"],
+          "prefixMatch": ["insight-harbor/silver/"]
+        }
+      }
+    },
+    {
+      "enabled": true,
+      "name": "temp-cleanup",
+      "type": "Lifecycle",
+      "definition": {
+        "actions": {
+          "baseBlob": {
+            "delete": {
+              "daysAfterModificationGreaterThan": 7
+            }
+          }
+        },
+        "filters": {
+          "blobTypes": ["blockBlob"],
+          "prefixMatch": ["insight-harbor/temp/"]
+        }
+      }
+    }
+  ]
+}

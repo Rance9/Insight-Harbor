@@ -1,0 +1,129 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.38.33.27573",
+      "templateHash": "6495878012584408165"
+    }
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "eastus2",
+      "metadata": {
+        "description": "Azure region for all resources."
+      }
+    },
+    "uniqueSuffix": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 5,
+      "metadata": {
+        "description": "Unique suffix appended to storage account name (3-5 lowercase chars/digits)."
+      }
+    },
+    "adlsAccountName": {
+      "type": "string",
+      "defaultValue": "[format('ihstorage{0}', parameters('uniqueSuffix'))]",
+      "metadata": {
+        "description": "Name of the ADLS Gen2 storage account for Bronze/Silver data layers."
+      }
+    },
+    "adlsContainerName": {
+      "type": "string",
+      "defaultValue": "insight-harbor",
+      "metadata": {
+        "description": "Name of the ADLS Gen2 container for Insight Harbor data."
+      }
+    },
+    "automationAccountName": {
+      "type": "string",
+      "defaultValue": "ih-automation",
+      "metadata": {
+        "description": "Name of the Azure Automation Account."
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2023-01-01",
+      "name": "[parameters('adlsAccountName')]",
+      "location": "[parameters('location')]",
+      "kind": "StorageV2",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "properties": {
+        "isHnsEnabled": true,
+        "accessTier": "Cool",
+        "supportsHttpsTrafficOnly": true,
+        "minimumTlsVersion": "TLS1_2",
+        "allowBlobPublicAccess": false,
+        "publicNetworkAccess": "Enabled"
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices",
+      "apiVersion": "2023-01-01",
+      "name": "[format('{0}/{1}', parameters('adlsAccountName'), 'default')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', parameters('adlsAccountName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+      "apiVersion": "2023-01-01",
+      "name": "[format('{0}/{1}/{2}', parameters('adlsAccountName'), 'default', parameters('adlsContainerName'))]",
+      "properties": {
+        "publicAccess": "None"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('adlsAccountName'), 'default')]"
+      ]
+    },
+    {
+      "type": "Microsoft.Automation/automationAccounts",
+      "apiVersion": "2023-11-01",
+      "name": "[parameters('automationAccountName')]",
+      "location": "[parameters('location')]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "sku": {
+          "name": "Free"
+        },
+        "publicNetworkAccess": true
+      }
+    }
+  ],
+  "outputs": {
+    "adlsAccountName": {
+      "type": "string",
+      "value": "[parameters('adlsAccountName')]"
+    },
+    "adlsContainerName": {
+      "type": "string",
+      "value": "[parameters('adlsContainerName')]"
+    },
+    "adlsPrimaryEndpoint": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Storage/storageAccounts', parameters('adlsAccountName')), '2023-01-01').primaryEndpoints.blob]"
+    },
+    "adlsResourceId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Storage/storageAccounts', parameters('adlsAccountName'))]"
+    },
+    "automationAccountName": {
+      "type": "string",
+      "value": "[parameters('automationAccountName')]"
+    },
+    "automationManagedIdentityPrincipalId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Automation/automationAccounts', parameters('automationAccountName')), '2023-11-01', 'full').identity.principalId]"
+    }
+  }
+}

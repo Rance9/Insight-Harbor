@@ -1,0 +1,27 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "centralus"
+    },
+    "uniqueSuffix": {
+      "value": "poc01"
+    },
+    "adlsAccountName": {
+      "value": "ihstoragepoc01"
+    },
+    "adlsContainerName": {
+      "value": "insight-harbor"
+    },
+    "staticWebAppName": {
+      "value": "ih-dashboard"
+    },
+    "functionAppName": {
+      "value": "ih-api-poc01"
+    },
+    "functionStorageAccountName": {
+      "value": "ihfuncstor01"
+    }
+  }
+}

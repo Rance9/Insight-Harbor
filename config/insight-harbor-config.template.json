@@ -1,0 +1,80 @@
+{
+  "_comment": "Copy this file to insight-harbor-config.json and fill in real values. NEVER commit insight-harbor-config.json.",
+
+  "solution": {
+    "name": "Insight Harbor",
+    "version": "0.1.0",
+    "environment": "poc"
+  },
+
+  "auth": {
+    "_comment": "Credentials for the Entra ID App Registration in the demo/customer tenant",
+    "tenantId": "<DEMO-TENANT-ID>",
+    "clientId": "<APP-REGISTRATION-CLIENT-ID>",
+    "clientSecret": "<CLIENT-SECRET — prefer Key Vault: IH-CLIENT-SECRET>",
+    "clientCertificateThumbprint": "<CERT-THUMBPRINT-IF-USING-CERT-AUTH>"
+  },
+
+  "keyVault": {
+    "_comment": "Azure Key Vault for secrets management. Function App uses Key Vault references via managed identity.",
+    "vaultName": "ih-keyvault-poc01",
+    "vaultUri": "https://ih-keyvault-poc01.vault.azure.net/",
+    "secrets": {
+      "adlsAccountKey": "IH-ADLS-ACCOUNT-KEY",
+      "clientSecret": "IH-CLIENT-SECRET",
+      "azureWebJobsStorage": "AzureWebJobsStorage"
+    }
+  },
+
+  "pax": {
+    "_comment": "PAX script configuration. releaseVersion must match the version header in each PAX script.",
+    "releaseVersion": "1.10.7",
+    "defaultActivityTypes": ["CopilotInteraction"],
+    "explosionMode": "raw",
+    "_explosionModeNote": "Always use 'raw' here — explosion is handled by the Python processor, not PAX",
+    "outputPath": "<LOCAL-OUTPUT-PATH e.g. ingestion/output>",
+    "outputDestination": "ADLS",
+    "_outputDestinationOptions": ["Local", "ADLS"]
+  },
+
+  "adls": {
+    "_comment": "Azure Data Lake Storage Gen2 connection info",
+    "storageAccountName": "<STORAGE-ACCOUNT-NAME>",
+    "storageAccountKey": "<STORAGE-ACCOUNT-KEY — prefer Key Vault: IH-ADLS-ACCOUNT-KEY>",
+    "containerName": "insight-harbor",
+    "paths": {
+      "bronzePurview": "bronze/purview",
+      "bronzeExploded": "bronze/exploded",
+      "silverCopilotUsage": "silver/copilot-usage",
+      "silverEntraUsers": "silver/entra-users"
+    }
+  },
+
+  "ingestion": {
+    "_comment": "Date range defaults for scheduled runs. Scripts override these with dynamic dates.",
+    "defaultLookbackDays": 1,
+    "outputLocalPath": "ingestion/output"
+  },
+
+  "notifications": {
+    "_comment": "Optional Teams webhook for version update notifications",
+    "teamsWebhookUrl": "<TEAMS-INCOMING-WEBHOOK-URL>",
+    "adminEmail": "<ADMIN-EMAIL-ADDRESS>"
+  },
+
+  "sources": {
+    "_comment": "Toggle each data source on/off. Only 'purview' is active in the initial PoC phase.",
+    "purview": {
+      "enabled": true,
+      "script": "PAX_Purview_Audit_Log_Processor.ps1"
+    },
+    "graph": {
+      "enabled": false,
+      "script": "PAX_Graph_Audit_Log_Processor.ps1"
+    },
+    "copilotInteractions": {
+      "enabled": false,
+      "script": "PAX_CopilotInteractions_Content_Audit_Log_Processor.ps1"
+    }
+  }
+}

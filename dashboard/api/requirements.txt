@@ -1,0 +1,6 @@
+azure-functions
+azure-storage-blob>=12.0.0
+pandas>=2.0.0
+PyJWT[crypto]>=2.8.0
+requests>=2.31.0
+azure-monitor-opentelemetry>=1.6.0
