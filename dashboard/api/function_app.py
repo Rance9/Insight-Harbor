@@ -580,3 +580,458 @@ def get_health(req: func.HttpRequest) -> func.HttpResponse:
         "version": "1.0.0",
         "timestamp": datetime.now(timezone.utc).isoformat()
     }, req=req)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Admin API — /api/admin/*
+# ═══════════════════════════════════════════════════════════════════════════════
+# These endpoints are gated by membership in the InsightHarbor-Admins
+# Entra security group (checked via the "groups" claim in the JWT).
+
+ADMIN_GROUP_ID = os.environ.get(
+    "IH_ADMIN_GROUP_ID",
+    ""  # Set to the Object ID of the InsightHarbor-Admins security group
+)
+
+PIPELINE_STATE_PREFIX = "pipeline/state/"
+PIPELINE_HISTORY_PREFIX = "pipeline/history/"
+
+
+def _is_admin(claims: dict) -> bool:
+    """Check whether the user's JWT contains the admin group claim."""
+    if not ADMIN_GROUP_ID:
+        # No group configured — allow any authenticated user (PoC mode)
+        return True
+    groups = claims.get("groups", [])
+    return ADMIN_GROUP_ID in groups
+
+
+def _admin_auth_error(req: func.HttpRequest) -> func.HttpResponse:
+    """Return 403 Forbidden for non-admin users."""
+    return _json_response({"error": "Forbidden. Admin role required."}, 403, req)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GET /api/admin/connectors
+# Returns status and configuration of all registered data connectors
+# ─────────────────────────────────────────────────────────────────────────────
+@app.route(route="admin/connectors", methods=["GET", "OPTIONS"])
+def admin_connectors(req: func.HttpRequest) -> func.HttpResponse:
+    preflight = _cors_preflight(req)
+    if preflight:
+        return preflight
+    claims = _validate_token(req)
+    if claims is None:
+        return _auth_error(req)
+    if not _is_admin(claims):
+        return _admin_auth_error(req)
+
+    try:
+        # Import connector registry (lives in the pipeline package)
+        import sys
+        pipeline_root = os.path.join(os.path.dirname(__file__), "..", "..", "pipeline")
+        if pipeline_root not in sys.path:
+            sys.path.insert(0, pipeline_root)
+
+        from shared.connectors.registry import ConnectorRegistry
+        ConnectorRegistry.reset()
+        registry = ConnectorRegistry.instance()
+
+        data = {
+            "connectors": registry.list_all(),
+            "enabled": registry.list_enabled(),
+            "validation": registry.validate_all(),
+            "generatedAt": datetime.now(timezone.utc).isoformat(),
+        }
+
+        ConnectorRegistry.reset()
+        return _json_response(data, req=req)
+
+    except Exception as exc:
+        logger.exception("Error in /api/admin/connectors")
+        return _error_response(str(exc), req=req)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GET /api/admin/runs?limit=10
+# Returns recent pipeline run history from ADLS state files
+# ─────────────────────────────────────────────────────────────────────────────
+@app.route(route="admin/runs", methods=["GET", "OPTIONS"])
+def admin_runs(req: func.HttpRequest) -> func.HttpResponse:
+    preflight = _cors_preflight(req)
+    if preflight:
+        return preflight
+    claims = _validate_token(req)
+    if claims is None:
+        return _auth_error(req)
+    if not _is_admin(claims):
+        return _admin_auth_error(req)
+
+    try:
+        limit = int(req.params.get("limit", 10))
+        limit = max(1, min(50, limit))
+
+        container = _get_blob_client()
+
+        # Enumerate run state files
+        runs: list[dict] = []
+        try:
+            blobs = list(container.list_blobs(name_starts_with=PIPELINE_HISTORY_PREFIX))
+            json_blobs = sorted(
+                [b for b in blobs if b.name.endswith(".json")],
+                key=lambda b: b.last_modified,
+                reverse=True,
+            )
+
+            for blob in json_blobs[:limit]:
+                try:
+                    data = container.download_blob(blob.name).readall()
+                    run_info = json.loads(data)
+                    run_info["_blob"] = blob.name
+                    runs.append(run_info)
+                except Exception:
+                    runs.append({"_blob": blob.name, "error": "parse_failed"})
+
+        except ResourceNotFoundError:
+            pass
+
+        # Also include current run state if available
+        current_state: dict | None = None
+        try:
+            state_blobs = list(container.list_blobs(name_starts_with=PIPELINE_STATE_PREFIX))
+            latest = sorted(
+                [b for b in state_blobs if b.name.endswith(".json")],
+                key=lambda b: b.last_modified,
+                reverse=True,
+            )
+            if latest:
+                data = container.download_blob(latest[0].name).readall()
+                current_state = json.loads(data)
+        except (ResourceNotFoundError, Exception):
+            pass
+
+        return _json_response({
+            "runs": runs,
+            "currentState": current_state,
+            "total": len(runs),
+            "generatedAt": datetime.now(timezone.utc).isoformat(),
+        }, req=req)
+
+    except Exception as exc:
+        logger.exception("Error in /api/admin/runs")
+        return _error_response(str(exc), req=req)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GET /api/admin/health
+# Extended health check — includes storage connectivity and connector status
+# ─────────────────────────────────────────────────────────────────────────────
+@app.route(route="admin/health", methods=["GET", "OPTIONS"])
+def admin_health(req: func.HttpRequest) -> func.HttpResponse:
+    preflight = _cors_preflight(req)
+    if preflight:
+        return preflight
+    claims = _validate_token(req)
+    if claims is None:
+        return _auth_error(req)
+    if not _is_admin(claims):
+        return _admin_auth_error(req)
+
+    try:
+        checks: dict[str, dict] = {}
+
+        # Storage connectivity
+        try:
+            container = _get_blob_client()
+            _ = list(container.list_blobs(name_starts_with="silver/", results_per_page=1))
+            checks["adls"] = {"status": "ok", "account": ADLS_ACCOUNT_NAME}
+        except Exception as exc:
+            checks["adls"] = {"status": "error", "detail": str(exc)}
+
+        # Silver data freshness
+        try:
+            df = _load_silver_df()
+            if df.empty:
+                checks["silver_data"] = {"status": "empty", "rows": 0}
+            else:
+                latest = None
+                if "_LoadedAtUtc" in df.columns:
+                    latest = str(df["_LoadedAtUtc"].max())
+                checks["silver_data"] = {
+                    "status": "ok",
+                    "rows": int(len(df)),
+                    "columns": int(len(df.columns)),
+                    "latestLoad": latest,
+                }
+        except Exception as exc:
+            checks["silver_data"] = {"status": "error", "detail": str(exc)}
+
+        overall = "ok" if all(c["status"] == "ok" for c in checks.values()) else "degraded"
+
+        return _json_response({
+            "status": overall,
+            "service": "insight-harbor-api",
+            "version": "1.0.0",
+            "checks": checks,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }, req=req)
+
+    except Exception as exc:
+        logger.exception("Error in /api/admin/health")
+        return _error_response(str(exc), req=req)
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# Semantic Query Engine: /api/schema  &  /api/query
+# ═════════════════════════════════════════════════════════════════════════════
+
+# Lazy-initialised singletons (heavy imports deferred to first call)
+_schema_catalog = None
+_query_generator = None
+
+
+def _get_schema_catalog():
+    """Lazy-load the SchemaCatalog singleton."""
+    global _schema_catalog
+    if _schema_catalog is None:
+        from shared.query.schema_catalog import SchemaCatalog
+        _schema_catalog = SchemaCatalog()
+    return _schema_catalog
+
+
+def _get_query_generator():
+    """Lazy-load the QueryGenerator singleton."""
+    global _query_generator
+    if _query_generator is None:
+        from shared.query.query_generator import QueryGenerator
+        _query_generator = QueryGenerator(_get_schema_catalog())
+    return _query_generator
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GET /api/schema[?dataset=<name>]
+# Returns schema metadata for all datasets, or details for one.
+# ─────────────────────────────────────────────────────────────────────────────
+@app.route(route="schema", methods=["GET", "OPTIONS"])
+def get_schema(req: func.HttpRequest) -> func.HttpResponse:
+    preflight = _cors_preflight(req)
+    if preflight:
+        return preflight
+    claims = _validate_token(req)
+    if claims is None:
+        return _auth_error(req)
+
+    try:
+        catalog = _get_schema_catalog()
+        dataset = req.params.get("dataset", "")
+
+        if dataset:
+            schema = catalog.get_schema(dataset)
+            if schema is None:
+                return _error_response(
+                    f"Unknown dataset '{dataset}'. Available: {', '.join(catalog.list_datasets())}",
+                    status=404, req=req,
+                )
+            return _json_response({
+                "dataset": dataset,
+                "display_name": catalog.get_display_name(dataset),
+                "description": catalog.get_description(dataset),
+                "grain": catalog.get_grain(dataset),
+                "silver_path": catalog.get_silver_path(dataset),
+                "columns": catalog.get_columns(dataset),
+                "queryable_columns": catalog.get_queryable_columns(dataset),
+                "aliases": schema.get("aliases", {}),
+                "generatedAt": datetime.now(timezone.utc).isoformat(),
+            }, req=req)
+        else:
+            return _json_response({
+                "datasets": catalog.to_summary(),
+                "total": len(catalog.list_datasets()),
+                "generatedAt": datetime.now(timezone.utc).isoformat(),
+            }, req=req)
+
+    except Exception as exc:
+        logger.exception("Error in /api/schema")
+        return _error_response(str(exc), req=req)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# POST /api/query
+# Execute a structured query DSL against Silver data.
+# Body: { "dataset": "...", "filters": [...], "group_by": [...], ... }
+# ─────────────────────────────────────────────────────────────────────────────
+@app.route(route="query", methods=["POST", "OPTIONS"])
+def run_query(req: func.HttpRequest) -> func.HttpResponse:
+    preflight = _cors_preflight(req)
+    if preflight:
+        return preflight
+    claims = _validate_token(req)
+    if claims is None:
+        return _auth_error(req)
+
+    try:
+        body = req.get_json()
+    except Exception:
+        return _error_response("Request body must be valid JSON", status=400, req=req)
+
+    try:
+        generator = _get_query_generator()
+        plan = generator.generate(body)
+    except Exception as exc:
+        return _error_response(f"Query validation failed: {exc}", status=400, req=req)
+
+    try:
+        from shared.query.query_executor import QueryExecutor
+
+        # Build a lightweight ADLS reader from the existing blob client
+        container = _get_blob_client()
+
+        class _AdlsReader:
+            """Thin adapter so QueryExecutor can call download_text()."""
+            def download_text(self, blob_path: str) -> str:
+                return container.download_blob(blob_path).readall().decode("utf-8")
+
+        executor = QueryExecutor(_AdlsReader())
+        result = executor.execute(plan)
+
+        return _json_response(result, req=req)
+
+    except Exception as exc:
+        logger.exception("Error executing query")
+        return _error_response(f"Query execution failed: {exc}", req=req)
+
+
+# Lazy singletons for viz + narrative
+_viz_recommender = None
+_narrative_generator = None
+
+
+def _get_viz_recommender():
+    global _viz_recommender
+    if _viz_recommender is None:
+        from shared.query.viz_recommender import VizRecommender
+        _viz_recommender = VizRecommender(_get_schema_catalog())
+    return _viz_recommender
+
+
+def _get_narrative_generator():
+    global _narrative_generator
+    if _narrative_generator is None:
+        from shared.query.narrative import NarrativeGenerator
+        _narrative_generator = NarrativeGenerator(_get_schema_catalog())
+    return _narrative_generator
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# POST /api/visualize
+# Run query + return result WITH visualization recommendation & narrative.
+# Body: same DSL as /api/query, with optional "include_narrative": true
+# ─────────────────────────────────────────────────────────────────────────────
+@app.route(route="visualize", methods=["POST", "OPTIONS"])
+def visualize(req: func.HttpRequest) -> func.HttpResponse:
+    preflight = _cors_preflight(req)
+    if preflight:
+        return preflight
+    claims = _validate_token(req)
+    if claims is None:
+        return _auth_error(req)
+
+    try:
+        body = req.get_json()
+    except Exception:
+        return _error_response("Request body must be valid JSON", status=400, req=req)
+
+    include_narrative = body.pop("include_narrative", True)
+    include_alternatives = body.pop("include_alternatives", False)
+
+    # 1. Validate query
+    try:
+        generator = _get_query_generator()
+        plan = generator.generate(body)
+    except Exception as exc:
+        return _error_response(f"Query validation failed: {exc}", status=400, req=req)
+
+    # 2. Execute query
+    try:
+        from shared.query.query_executor import QueryExecutor
+        container = _get_blob_client()
+
+        class _AdlsReader:
+            def download_text(self, blob_path: str) -> str:
+                return container.download_blob(blob_path).readall().decode("utf-8")
+
+        executor = QueryExecutor(_AdlsReader())
+        result = executor.execute(plan)
+    except Exception as exc:
+        logger.exception("Error executing query for /api/visualize")
+        return _error_response(f"Query execution failed: {exc}", req=req)
+
+    # 3. Recommend visualization
+    try:
+        recommender = _get_viz_recommender()
+        if include_alternatives:
+            recs = recommender.recommend_multiple(plan, result)
+            result["visualization"] = recs[0].to_dict()
+            result["alternatives"] = [r.to_dict() for r in recs[1:]]
+        else:
+            rec = recommender.recommend(plan, result)
+            result["visualization"] = rec.to_dict()
+    except Exception as exc:
+        logger.warning("Viz recommendation failed: %s", exc)
+        result["visualization"] = {"chart_type": "table", "title": "Data",
+                                   "description": "Fallback table view"}
+
+    # 4. Generate narrative (optional)
+    if include_narrative:
+        try:
+            narrator = _get_narrative_generator()
+            result["narrative"] = narrator.generate(plan, result)
+        except Exception as exc:
+            logger.warning("Narrative generation failed: %s", exc)
+            result["narrative"] = {"summary": "", "insights": [], "methodology": ""}
+
+    return _json_response(result, req=req)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# POST /api/narrative
+# Generate a narrative summary for a previously-executed query result.
+# Body: { "plan": {...}, "result": {...} }
+# ─────────────────────────────────────────────────────────────────────────────
+@app.route(route="narrative", methods=["POST", "OPTIONS"])
+def get_narrative(req: func.HttpRequest) -> func.HttpResponse:
+    preflight = _cors_preflight(req)
+    if preflight:
+        return preflight
+    claims = _validate_token(req)
+    if claims is None:
+        return _auth_error(req)
+
+    try:
+        body = req.get_json()
+    except Exception:
+        return _error_response("Request body must be valid JSON", status=400, req=req)
+
+    plan_dict = body.get("plan")
+    result_data = body.get("result")
+    if not plan_dict or not result_data:
+        return _error_response("Body must include 'plan' and 'result' keys", status=400, req=req)
+
+    try:
+        from shared.query.query_generator import QueryPlan
+        plan = QueryPlan(
+            dataset=plan_dict.get("dataset", ""),
+            silver_path=plan_dict.get("silver_path", ""),
+            filters=plan_dict.get("filters", []),
+            group_by=plan_dict.get("group_by", []),
+            aggregations=plan_dict.get("aggregations", []),
+            sort_by=plan_dict.get("sort_by", []),
+            limit=plan_dict.get("limit", 1000),
+            columns=plan_dict.get("columns"),
+        )
+        narrator = _get_narrative_generator()
+        narrative = narrator.generate(plan, result_data)
+        return _json_response(narrative, req=req)
+    except Exception as exc:
+        logger.exception("Error in /api/narrative")
+        return _error_response(str(exc), req=req)

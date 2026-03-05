@@ -1,0 +1,163 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Insight Harbor — Entra ID Users Silver Schema
+# ──────────────────────────────────────────────────────────────────────────────
+# Source connector: entra
+# Silver path:     silver/entra-users/silver_entra_users.csv
+
+dataset: entra_users
+display_name: Entra ID Users
+connector: entra
+silver_path: silver/entra-users/silver_entra_users.csv
+description: >
+  User directory snapshot from Microsoft Entra ID. One row per user.
+  Includes org structure, license status, and Copilot license detection.
+grain: one row per user (daily snapshot)
+refresh: daily (pipeline schedule)
+
+columns:
+  - name: UserPrincipalName
+    type: string
+    description: User's unique sign-in name (email format).
+    semantic: user_id
+    queryable: true
+  - name: DisplayName
+    type: string
+    description: User's display name.
+    semantic: label
+    queryable: true
+  - name: EntraObjectId
+    type: string
+    description: Entra ID (Azure AD) object GUID.
+    semantic: id
+  - name: Email
+    type: string
+    description: Primary email address.
+    semantic: email
+  - name: JobTitle
+    type: string
+    description: Job title.
+    semantic: category
+    queryable: true
+  - name: Department
+    type: string
+    description: Department name.
+    semantic: category
+    queryable: true
+  - name: EmployeeType
+    type: string
+    description: Employee type.
+    semantic: category
+    queryable: true
+  - name: EmployeeId
+    type: string
+    description: HR employee identifier.
+    semantic: id
+  - name: HireDate
+    type: date
+    description: Employee hire date.
+    semantic: date
+  - name: OfficeLocation
+    type: string
+    description: Physical office location.
+    semantic: category
+    queryable: true
+  - name: City
+    type: string
+    description: City.
+    semantic: category
+    queryable: true
+  - name: State
+    type: string
+    description: State or province.
+    semantic: category
+    queryable: true
+  - name: Country
+    type: string
+    description: Country or region.
+    semantic: category
+    queryable: true
+  - name: PostalCode
+    type: string
+    description: Postal code.
+    semantic: label
+  - name: CompanyName
+    type: string
+    description: Company name.
+    semantic: category
+    queryable: true
+  - name: Division
+    type: string
+    description: Organisational division.
+    semantic: category
+    queryable: true
+  - name: CostCenter
+    type: string
+    description: Cost center identifier.
+    semantic: category
+  - name: UsageLocation
+    type: string
+    description: ISO 3166-1 alpha-2 usage location (for license assignment).
+    semantic: category
+    queryable: true
+  - name: AccountEnabled
+    type: string
+    description: Whether the account is enabled ("True"/"False").
+    semantic: flag
+    queryable: true
+  - name: UserType
+    type: string
+    description: User type (Member, Guest).
+    semantic: category
+    queryable: true
+  - name: AccountCreatedDate
+    type: datetime
+    description: Account creation timestamp.
+    semantic: timestamp
+  - name: ManagerDisplayName
+    type: string
+    description: Manager's display name.
+    semantic: label
+  - name: ManagerUPN
+    type: string
+    description: Manager's UPN.
+    semantic: user_id
+  - name: ManagerJobTitle
+    type: string
+    description: Manager's job title.
+    semantic: category
+  - name: AssignedLicenses
+    type: string
+    description: JSON array of assigned license SKU GUIDs.
+    semantic: json
+  - name: HasLicense
+    type: string
+    description: Whether user has any M365 license ("True"/"False").
+    semantic: flag
+    queryable: true
+  - name: HasCopilotLicense
+    type: string
+    description: Whether user has a Copilot license ("True"/"False").
+    semantic: flag
+    queryable: true
+  - name: LicenseTier
+    type: string
+    description: License tier classification.
+    semantic: category
+    queryable: true
+  - name: _SnapshotDate
+    type: date
+    description: Date this snapshot was taken.
+    semantic: date
+  - name: _LoadedAtUtc
+    type: datetime
+    description: Pipeline load timestamp.
+    semantic: metadata
+
+aliases:
+  users: "dataset = 'entra_users'"
+  licensed users: "filter HasLicense = 'True'"
+  copilot licensed: "filter HasCopilotLicense = 'True'"
+  users by department: "group by Department with count"
+  users by country: "group by Country with count"
+  guest users: "filter UserType = 'Guest'"
+  disabled accounts: "filter AccountEnabled = 'False'"

@@ -9,7 +9,13 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def _set_env_defaults(monkeypatch):
-    """Seed minimal env vars so config.py loads without KeyError."""
+    """Seed minimal env vars so config.py loads without KeyError.
+
+    After setting env vars we also rebuild the module-level
+    ``config`` singleton so every test sees a fresh
+    ``PipelineConfig`` instance that reflects the monkeypatched
+    environment.
+    """
     defaults = {
         "IH_TENANT_ID": "00000000-0000-0000-0000-000000000000",
         "IH_CLIENT_ID": "00000000-0000-0000-0000-000000000001",
@@ -34,3 +40,9 @@ def _set_env_defaults(monkeypatch):
     }
     for k, v in defaults.items():
         monkeypatch.setenv(k, v)
+
+    # Re-initialise the *existing* config singleton in-place so that
+    # every module that did ``from shared.config import config`` still
+    # references the same object but with refreshed values.
+    import shared.config as cfg_mod
+    cfg_mod.config.__init__()

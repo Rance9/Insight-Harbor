@@ -104,7 +104,7 @@ insight-harbor/
 |   +-- requirements.txt              # Python dependencies
 |   +-- local.settings.json           # Local dev settings (gitignored values)
 |   +-- .funcignore                   # Deployment exclusions
-|   +-- shared/                       # Shared modules (9 files)
+|   +-- shared/                       # Shared modules
 |   |   +-- config.py                 # Environment-based typed configuration
 |   |   +-- constants.py              # ADLS paths, Graph endpoints, limits
 |   |   +-- models.py                 # Pydantic models for pipeline state
@@ -114,6 +114,20 @@ insight-harbor/
 |   |   +-- explosion.py              # 153-column JSON->flat schema explosion
 |   |   +-- transforms.py             # Bronze-to-Silver Copilot usage transforms
 |   |   +-- entra_transforms.py       # Entra user profile transforms
+|   |   +-- connectors/               # Pluggable connector framework
+|   |   |   +-- base.py               # BaseConnector ABC + ConnectorPhase
+|   |   |   +-- registry.py           # ConnectorRegistry singleton (auto-discover)
+|   |   |   +-- purview_audit.py      # Purview audit log connector
+|   |   |   +-- entra.py              # Entra ID user connector
+|   |   |   +-- m365_usage.py         # M365 Usage Reports connector (Graph)
+|   |   |   +-- graph_activity.py     # Graph sign-in / audit log connector
+|   |   +-- query/                    # Semantic query engine
+|   |       +-- schemas/*.yaml        # YAML schema catalog (4 datasets)
+|   |       +-- schema_catalog.py     # Schema metadata registry
+|   |       +-- query_generator.py    # DSL validation → QueryPlan
+|   |       +-- query_executor.py     # Pandas-based query execution
+|   |       +-- viz_recommender.py    # Rule-based chart recommendation
+|   |       +-- narrative.py          # AI narrative / insight generation
 |   +-- orchestrators/                # Durable orchestrators (2)
 |   |   +-- pipeline_orchestrator.py  # Main orchestrator (fan-out/fan-in)
 |   |   +-- process_partition.py      # Per-partition sub-orchestrator
@@ -129,7 +143,7 @@ insight-harbor/
 |   |   +-- transform_silver.py       # Bronze->Silver enrichment
 |   |   +-- notify.py                 # Teams webhook notifications
 |   |   +-- run_state.py              # Pipeline state management
-|   +-- tests/                        # Unit tests (113 tests, 7 files)
+|   +-- tests/                        # Unit tests (288 tests, 11 files)
 |   |   +-- conftest.py
 |   |   +-- test_partitioning.py
 |   |   +-- test_transforms.py
@@ -137,6 +151,10 @@ insight-harbor/
 |   |   +-- test_explosion.py
 |   |   +-- test_graph_client.py
 |   |   +-- test_models.py
+|   |   +-- test_connectors.py        # Connector framework tests (45)
+|   |   +-- test_multi_source.py      # Multi-source ingestion tests (38)
+|   |   +-- test_semantic_query.py    # Schema/query/executor tests (61)
+|   |   +-- test_viz_narrative.py     # Viz recommender + narrative tests (31)
 |   +-- deploy/
 |       +-- provision-azure-resources.ps1  # Azure resource provisioning
 |
@@ -147,6 +165,7 @@ insight-harbor/
 +-- docs/
 |   +-- IMPLEMENTATION_PLAN_Durable_Functions_Pipeline.md  # 2,320-line plan
 |   +-- PAX_Purview_Audit_Report.md   # PAX audit & gap analysis (724 lines)
+|   +-- adding-a-connector.md         # How to build a new data connector
 |   +-- app-registration-setup.md
 |   +-- pax-ai-prompts.md
 |   +-- powerbi-setup-guide.md
@@ -174,10 +193,12 @@ insight-harbor/
 +-- dashboard/
 |   +-- html/
 |   |   +-- index.html                # Single-page dashboard (~1400 lines)
+|   |   +-- admin.html                # Admin console (connectors, runs, health)
+|   |   +-- explore.html              # Explore: schema browser + query runner
 |   |   +-- staticwebapp.config.json  # SWA routing & security headers
 |   |   +-- robots.txt
 |   +-- api/
-|   |   +-- function_app.py           # Dashboard API (7 endpoints)
+|   |   +-- function_app.py           # Dashboard API (15 endpoints)
 |   |   +-- requirements.txt
 |   |   +-- host.json
 |   +-- powerbi/                      # (Future: Power BI reports)
@@ -318,15 +339,22 @@ The dashboard is a single-page HTML application (~1400 lines, no build step) ser
 
 All endpoints require a Bearer token (Entra ID) except `/api/health`.
 
-| Endpoint | Description |
-|---|---|
-| `/api/summary` | Top-level KPIs |
-| `/api/trend?days=30` | Daily prompt trend |
-| `/api/department` | Department breakdown |
-| `/api/workload` | Workload breakdown |
-| `/api/licensing` | License utilization |
-| `/api/hourly` | Hour-of-day heatmap data |
-| `/api/health` | Health check (anonymous) |
+| Endpoint | Method | Description |
+|---|---|---|
+| `/api/summary` | GET | Top-level KPIs |
+| `/api/trend?days=30` | GET | Daily prompt trend |
+| `/api/department` | GET | Department breakdown |
+| `/api/workload` | GET | Workload breakdown |
+| `/api/licensing` | GET | License utilization |
+| `/api/hourly` | GET | Hour-of-day heatmap data |
+| `/api/health` | GET | Health check (anonymous) |
+| `/api/admin/connectors` | GET | Connector status & config (admin) |
+| `/api/admin/runs?limit=N` | GET | Pipeline run history (admin) |
+| `/api/admin/health` | GET | Extended health (admin) |
+| `/api/schema[?dataset=X]` | GET | Schema metadata / column details |
+| `/api/query` | POST | Execute structured query DSL |
+| `/api/visualize` | POST | Query + viz recommendation + narrative |
+| `/api/narrative` | POST | Generate narrative for a result set |
 
 ---
 
@@ -369,14 +397,16 @@ All endpoints require a Bearer token (Entra ID) except `/api/health`.
 
 ---
 
-## Data Sources
+## Data Sources (Connector Framework)
 
-| Source | Pipeline | Data | Status |
+All sources use the pluggable connector framework (`shared/connectors/`). See [docs/adding-a-connector.md](docs/adding-a-connector.md) for how to add new connectors.
+
+| Source | Connector | Data | Status |
 |---|---|---|---|
-| Purview Audit Logs | Durable Functions | CopilotInteraction events | **Active** |
-| Entra User Profiles | Durable Functions | User metadata & licensing | **Active** |
-| Graph Audit Logs | - | Graph API audit events | Planned |
-| Copilot Interactions | - | Content-level audit | Planned |
+| Purview Audit Logs | `PurviewAuditConnector` | CopilotInteraction events | **Active** |
+| Entra User Profiles | `EntraConnector` | User metadata & licensing | **Active** |
+| M365 Usage Reports | `M365UsageReportsConnector` | App adoption, Teams, Email, SPO, OD | **Ready** |
+| Graph Activity Logs | `GraphActivityConnector` | Sign-in & directory audit events | **Ready** |
 
 ---
 
@@ -404,7 +434,7 @@ Custom Domain: **`ih.data-analytics.tech`** (via Azure Front Door)
 | ADLS Gen2 | `ihstoragepoc01` | Storage Account | East US 2 | Bronze & Silver data layers |
 | Pipeline Function App | `ih-pipeline-func01` | Azure Functions (Python 3.11) | East US 2 | Durable Functions ingestion pipeline |
 | Pipeline Storage | `ihpipelinestor01` | Storage Account | East US 2 | Durable task hub backing store |
-| Dashboard API | `ih-api-poc01` | Azure Functions (Python 3.11) | Central US | REST API (7 endpoints) |
+| Dashboard API | `ih-api-poc01` | Azure Functions (Python 3.11) | Central US | REST API (15 endpoints) |
 | Static Web App | `ih-dashboard` | Static Web App | Central US | HTML dashboard frontend |
 | Key Vault | `ih-keyvault-poc01` | Key Vault | Central US | Secrets management |
 | App Insights | `ih-app-insights` | Application Insights | Central US | Telemetry & monitoring |
@@ -428,14 +458,14 @@ Demo Tenant: `M365CPI01318443.onmicrosoft.com` (`579e8f66-10ec-4646-a923-b9dc013
 ## Testing
 
 ```powershell
-# Run all 113 unit tests
+# Run all 288 unit tests
 pytest pipeline/tests/ -v
 
 # Run specific test module
 pytest pipeline/tests/test_explosion.py -v
 ```
 
-Test coverage: partitioning logic, explosion schema, transforms, Entra transforms, Graph client, Pydantic models.
+Test coverage: partitioning logic, explosion schema, transforms, Entra transforms, Graph client, Pydantic models, connector framework (4 connectors), multi-source ingestion, semantic query engine, viz recommender, narrative generator.
 
 ---
 

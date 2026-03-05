@@ -1,0 +1,191 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Insight Harbor — Graph Activity Logs Silver Schema
+# ──────────────────────────────────────────────────────────────────────────────
+# Source connector: graph_activity
+# Silver path:     silver/graph-activity/silver_graph_activity.csv
+
+dataset: graph_activity
+display_name: Graph Activity Logs
+connector: graph_activity
+silver_path: silver/graph-activity/silver_graph_activity.csv
+description: >
+  Sign-in events and directory audit logs from the Graph API auditLogs
+  endpoints. Covers user authentication events, MFA usage, conditional
+  access evaluations, and directory changes.
+grain: one row per sign-in or directory audit event
+refresh: daily (pipeline schedule)
+
+columns:
+  # ── Identity ───────────────────────────────────────────────────────────
+  - name: UserId
+    type: string
+    description: User object GUID.
+    semantic: id
+  - name: UserPrincipalName
+    type: string
+    description: User's UPN.
+    semantic: user_id
+    queryable: true
+  - name: DisplayName
+    type: string
+    description: User's display name.
+    semantic: label
+    queryable: true
+  - name: UserType
+    type: string
+    description: User type (member, guest, etc.).
+    semantic: category
+    queryable: true
+
+  # ── Event ──────────────────────────────────────────────────────────────
+  - name: EventType
+    type: string
+    description: Event classification ("SignIn" or "DirectoryAudit").
+    semantic: category
+    queryable: true
+    common_values: ["SignIn", "DirectoryAudit"]
+  - name: EventId
+    type: string
+    description: Unique event identifier.
+    semantic: id
+  - name: EventTime
+    type: datetime
+    description: UTC timestamp of the event.
+    semantic: timestamp
+    queryable: true
+  - name: EventDate
+    type: date
+    description: Date portion of EventTime (YYYY-MM-DD).
+    semantic: date
+    queryable: true
+
+  # ── Sign-in details ───────────────────────────────────────────────────
+  - name: AppDisplayName
+    type: string
+    description: Application the user signed in to.
+    semantic: label
+    queryable: true
+  - name: AppId
+    type: string
+    description: Application GUID.
+    semantic: id
+  - name: IpAddress
+    type: string
+    description: Client IP address.
+    semantic: ip_address
+  - name: Location_City
+    type: string
+    description: Sign-in city (geo-IP).
+    semantic: category
+    queryable: true
+  - name: Location_State
+    type: string
+    description: Sign-in state/province.
+    semantic: category
+  - name: Location_Country
+    type: string
+    description: Sign-in country.
+    semantic: category
+    queryable: true
+  - name: ClientAppUsed
+    type: string
+    description: Client application used (Browser, Mobile, Desktop).
+    semantic: category
+    queryable: true
+  - name: DeviceDetail_Browser
+    type: string
+    description: Browser name and version.
+    semantic: label
+  - name: DeviceDetail_OS
+    type: string
+    description: Operating system.
+    semantic: category
+    queryable: true
+  - name: DeviceDetail_DeviceId
+    type: string
+    description: Device identifier.
+    semantic: id
+  - name: IsInteractive
+    type: string
+    description: Whether the sign-in was interactive ("True"/"False").
+    semantic: flag
+    queryable: true
+  - name: ResourceDisplayName
+    type: string
+    description: Resource the user signed in to.
+    semantic: label
+    queryable: true
+  - name: ResourceId
+    type: string
+    description: Resource GUID.
+    semantic: id
+  - name: ConditionalAccessStatus
+    type: string
+    description: Conditional Access evaluation result.
+    semantic: category
+    queryable: true
+    common_values: ["success", "failure", "notApplied"]
+  - name: RiskState
+    type: string
+    description: User risk state.
+    semantic: category
+    queryable: true
+  - name: RiskLevelDuringSignIn
+    type: string
+    description: Risk level during sign-in.
+    semantic: category
+  - name: MfaRequired
+    type: string
+    description: Whether MFA was required ("Yes"/"No").
+    semantic: flag
+    queryable: true
+  - name: Status_ErrorCode
+    type: string
+    description: Sign-in error code (0 = success).
+    semantic: status
+  - name: Status_FailureReason
+    type: string
+    description: Failure reason if sign-in failed.
+    semantic: text
+
+  # ── Directory audit details ────────────────────────────────────────────
+  - name: ActivityDisplayName
+    type: string
+    description: Directory audit activity name.
+    semantic: label
+    queryable: true
+  - name: Category
+    type: string
+    description: Audit activity category.
+    semantic: category
+    queryable: true
+  - name: Result
+    type: string
+    description: Audit activity result.
+    semantic: status
+    queryable: true
+  - name: TargetResource
+    type: string
+    description: Target resource display name.
+    semantic: label
+
+  # ── Metadata ───────────────────────────────────────────────────────────
+  - name: _SourceEndpoint
+    type: string
+    description: Source Graph API endpoint (signIns or directoryAudits).
+    semantic: metadata
+  - name: _LoadedAtUtc
+    type: datetime
+    description: Pipeline load timestamp.
+    semantic: metadata
+
+aliases:
+  sign ins: "filter EventType = 'SignIn'"
+  sign-ins: "filter EventType = 'SignIn'"
+  logins: "filter EventType = 'SignIn'"
+  directory audits: "filter EventType = 'DirectoryAudit'"
+  failed sign ins: "filter EventType = 'SignIn' and Status_ErrorCode != '0'"
+  mfa required: "filter MfaRequired = 'Yes'"
+  risky sign ins: "filter RiskState != 'none' and RiskState != ''"
+  sign ins by app: "filter EventType = 'SignIn' group by AppDisplayName with count"
+  sign ins by country: "filter EventType = 'SignIn' group by Location_Country with count"

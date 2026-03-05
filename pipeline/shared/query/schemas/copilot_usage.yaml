@@ -1,0 +1,334 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Insight Harbor — Copilot Usage (Purview Audit) Silver Schema
+# ──────────────────────────────────────────────────────────────────────────────
+# Source connector: purview_audit
+# Silver path:     silver/copilot-usage/silver_copilot_usage.csv
+
+dataset: copilot_usage
+display_name: Copilot Usage
+connector: purview_audit
+silver_path: silver/copilot-usage/silver_copilot_usage.csv
+description: >
+  Copilot interaction events extracted from Purview audit logs. Each row
+  represents one message turn (prompt or response) within a Copilot session.
+  Enriched with Entra user metadata (department, job title, license status).
+grain: one row per Copilot message turn
+refresh: daily (pipeline schedule)
+
+columns:
+  # ── Record identity ────────────────────────────────────────────────────
+  - name: RecordId
+    type: string
+    description: Unique audit record identifier.
+    semantic: id
+  - name: CreationTime
+    type: datetime
+    description: UTC timestamp when the audit event was created.
+    semantic: timestamp
+  - name: RecordType
+    type: string
+    description: Audit record type code (e.g. "CopilotInteraction").
+    semantic: category
+  - name: Operation
+    type: string
+    description: Operation name (e.g. "CopilotInteraction").
+    semantic: category
+  - name: UserId
+    type: string
+    description: UPN of the user who triggered the event.
+    semantic: user_id
+
+  # ── Organisation ───────────────────────────────────────────────────────
+  - name: OrganizationId
+    type: string
+    description: Tenant/organisation GUID.
+    semantic: id
+  - name: UserType
+    type: string
+    description: User account type (Regular, Admin, etc.).
+    semantic: category
+  - name: ResultStatus
+    type: string
+    description: Operation result status.
+    semantic: status
+  - name: ObjectId
+    type: string
+    description: Object identifier for the audit event.
+    semantic: id
+  - name: Workload
+    type: string
+    description: M365 workload that generated the event.
+    semantic: category
+
+  # ── Network / Client ──────────────────────────────────────────────────
+  - name: ClientIP
+    type: string
+    description: IP address of the client.
+    semantic: ip_address
+  - name: Scope
+    type: string
+    description: Event scope identifier.
+    semantic: category
+  - name: UserKey
+    type: string
+    description: Alternative user key.
+    semantic: id
+
+  # ── App Access Context ─────────────────────────────────────────────────
+  - name: AppAccessContext_AADSessionId
+    type: string
+    description: AAD session identifier.
+    semantic: id
+  - name: AppAccessContext_APIId
+    type: string
+    description: API identifier.
+    semantic: id
+  - name: AppAccessContext_ClientAppId
+    type: string
+    description: Client application GUID.
+    semantic: id
+  - name: AppAccessContext_ClientAppName
+    type: string
+    description: Client application display name.
+    semantic: label
+  - name: AppAccessContext_CorrelationId
+    type: string
+    description: Correlation identifier for request tracing.
+    semantic: id
+  - name: AppAccessContext_UniqueTokenId
+    type: string
+    description: Unique token identifier.
+    semantic: id
+  - name: AppAccessContext_IssuedAtTime
+    type: datetime
+    description: Token issuance time.
+    semantic: timestamp
+
+  # ── Copilot Event Data ─────────────────────────────────────────────────
+  - name: CopilotEventData_AppHost
+    type: string
+    description: Copilot host application (Word, Teams, etc.).
+    semantic: category
+    queryable: true
+    common_values: ["Word", "Teams", "PowerPoint", "Excel", "Outlook", "OneNote", "Loop", "Whiteboard"]
+  - name: CopilotEventData_Contexts
+    type: string
+    description: JSON array of context objects used by Copilot.
+    semantic: json
+  - name: CopilotEventData_ThreadId
+    type: string
+    description: Copilot conversation thread identifier.
+    semantic: id
+  - name: CopilotEventData_ConversationId
+    type: string
+    description: Copilot conversation identifier.
+    semantic: id
+  - name: CopilotEventData_MessageId
+    type: string
+    description: Individual message identifier within the conversation.
+    semantic: id
+  - name: CopilotEventData_AccessedResources
+    type: string
+    description: JSON array of resources Copilot accessed.
+    semantic: json
+  - name: CopilotEventData_SensitivityLabel
+    type: string
+    description: Sensitivity label applied to the Copilot interaction.
+    semantic: category
+  - name: CopilotEventData_CitationSources
+    type: string
+    description: JSON array of citation source references.
+    semantic: json
+  - name: CopilotEventData_CitationSourceCount
+    type: integer
+    description: Number of citations returned.
+    semantic: measure
+
+  # ── Message ────────────────────────────────────────────────────────────
+  - name: Message_TurnNumber
+    type: integer
+    description: Turn number within the conversation.
+    semantic: measure
+  - name: Message_Id
+    type: string
+    description: Individual message identifier.
+    semantic: id
+  - name: Message_isPrompt
+    type: string
+    description: Whether this message is a user prompt ("true"/"false").
+    semantic: flag
+    queryable: true
+  - name: Message_Content
+    type: string
+    description: Message content text (prompt or response).
+    semantic: text
+  - name: Message_ContentType
+    type: string
+    description: Content MIME type.
+    semantic: category
+  - name: Message_ContentSize
+    type: integer
+    description: Content size in bytes.
+    semantic: measure
+  - name: Message_TokenCount
+    type: integer
+    description: Token count for this message.
+    semantic: measure
+  - name: Message_SensitivityLabel
+    type: string
+    description: Sensitivity label on the message.
+    semantic: category
+  - name: Message_SensitivityLabelId
+    type: string
+    description: Sensitivity label GUID.
+    semantic: id
+  - name: Message_PluginNames
+    type: string
+    description: Comma-separated plugin names invoked.
+    semantic: label
+  - name: Message_CreatedTime
+    type: datetime
+    description: Message creation time.
+    semantic: timestamp
+  - name: Message_ModifiedTime
+    type: datetime
+    description: Message modification time.
+    semantic: timestamp
+
+  # ── Agent ──────────────────────────────────────────────────────────────
+  - name: AgentId
+    type: string
+    description: Copilot agent identifier.
+    semantic: id
+  - name: AgentName
+    type: string
+    description: Agent display name.
+    semantic: label
+    queryable: true
+  - name: AgentType
+    type: string
+    description: Agent type (DeclarativeAgent, etc.).
+    semantic: category
+  - name: AgentScope
+    type: string
+    description: Agent scope (tenant, user, etc.).
+    semantic: category
+
+  # ── Performance metrics ────────────────────────────────────────────────
+  - name: TurnNumber
+    type: integer
+    description: Overall turn number.
+    semantic: measure
+  - name: TokensTotal
+    type: integer
+    description: Total tokens (input + output).
+    semantic: measure
+    queryable: true
+  - name: TokensInput
+    type: integer
+    description: Input token count.
+    semantic: measure
+  - name: TokensOutput
+    type: integer
+    description: Output token count.
+    semantic: measure
+  - name: DurationMs
+    type: integer
+    description: Response duration in milliseconds.
+    semantic: measure
+    queryable: true
+
+  # ── Computed columns ───────────────────────────────────────────────────
+  - name: UsageDate
+    type: date
+    description: Date portion of CreationTime (YYYY-MM-DD).
+    semantic: date
+    queryable: true
+  - name: UsageHour
+    type: integer
+    description: Hour-of-day (0-23) from CreationTime.
+    semantic: measure
+    queryable: true
+  - name: PromptType
+    type: string
+    description: Derived prompt type classification.
+    semantic: category
+    queryable: true
+  - name: IsAgent
+    type: string
+    description: Whether this interaction involved a Copilot agent ("true"/"false").
+    semantic: flag
+    queryable: true
+  - name: _SourceFile
+    type: string
+    description: Source blob path in Bronze tier.
+    semantic: metadata
+  - name: _LoadedAtUtc
+    type: datetime
+    description: Pipeline load timestamp.
+    semantic: metadata
+
+  # ── Entra enrichment ───────────────────────────────────────────────────
+  - name: Department
+    type: string
+    description: User's department from Entra ID.
+    semantic: category
+    queryable: true
+  - name: JobTitle
+    type: string
+    description: User's job title from Entra ID.
+    semantic: category
+    queryable: true
+  - name: Country
+    type: string
+    description: User's country from Entra ID.
+    semantic: category
+    queryable: true
+  - name: City
+    type: string
+    description: User's city from Entra ID.
+    semantic: category
+    queryable: true
+  - name: ManagerDisplayName
+    type: string
+    description: Manager's display name from Entra ID.
+    semantic: label
+  - name: Division
+    type: string
+    description: Organisation division from Entra ID.
+    semantic: category
+    queryable: true
+  - name: CostCenter
+    type: string
+    description: Cost center from Entra ID.
+    semantic: category
+  - name: HasCopilotLicense
+    type: string
+    description: Whether user holds a Copilot license ("True"/"False").
+    semantic: flag
+    queryable: true
+  - name: LicenseTier
+    type: string
+    description: License tier classification.
+    semantic: category
+    queryable: true
+  - name: CompanyName
+    type: string
+    description: Company name from Entra ID.
+    semantic: category
+
+# ── Common natural language aliases ──────────────────────────────────────
+aliases:
+  copilot events: "dataset = 'copilot_usage'"
+  copilot usage: "dataset = 'copilot_usage'"
+  who uses copilot: "group by UserId with count"
+  which apps: "group by CopilotEventData_AppHost with count"
+  app usage: "group by CopilotEventData_AppHost with count"
+  token usage: "sum of TokensTotal"
+  response time: "avg of DurationMs"
+  daily trend: "group by UsageDate with count"
+  hourly pattern: "group by UsageHour with count"
+  department breakdown: "group by Department with count"
+  agent usage: "filter IsAgent = 'true'"
+  prompts only: "filter Message_isPrompt = 'true'"
+  responses only: "filter Message_isPrompt = 'false'"

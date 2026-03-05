@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Insight Harbor — Explore</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --border: #30363d;
+    --text: #c9d1d9; --dim: #8b949e; --accent: #58a6ff;
+    --green: #3fb950; --yellow: #d29922; --red: #f85149;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+         background: var(--bg); color: var(--text); padding: 24px; }
+  h1 { font-size: 1.4rem; margin-bottom: 4px; }
+  .subtitle { color: var(--dim); font-size: 0.85rem; margin-bottom: 20px; }
+  .layout { display: grid; grid-template-columns: 280px 1fr; gap: 20px; }
+
+  /* ── Sidebar ────────────────────── */
+  .sidebar { background: var(--surface); border: 1px solid var(--border);
+             border-radius: 8px; padding: 16px; max-height: 85vh; overflow-y: auto; }
+  .sidebar h2 { font-size: 0.95rem; margin-bottom: 12px; }
+  .ds-btn { display: block; width: 100%; text-align: left; background: none;
+            border: 1px solid var(--border); color: var(--text); padding: 8px 12px;
+            border-radius: 6px; margin-bottom: 6px; cursor: pointer; font-size: 0.85rem; }
+  .ds-btn:hover { border-color: var(--accent); }
+  .ds-btn.active { border-color: var(--accent); background: rgba(88,166,255,.1); }
+  .col-list { list-style: none; margin: 10px 0 0 0; max-height: 300px; overflow-y: auto; }
+  .col-list li { font-size: 0.78rem; color: var(--dim); padding: 3px 0;
+                 border-bottom: 1px solid var(--border); }
+  .col-list li .tag { float: right; font-size: 0.7rem; background: var(--border);
+                      padding: 1px 6px; border-radius: 4px; }
+
+  /* ── Main content ───────────────── */
+  .main { display: flex; flex-direction: column; gap: 16px; }
+  .query-panel { background: var(--surface); border: 1px solid var(--border);
+                 border-radius: 8px; padding: 16px; }
+  .query-panel h2 { font-size: 0.95rem; margin-bottom: 10px; }
+  textarea { width: 100%; height: 140px; background: var(--bg); color: var(--text);
+             border: 1px solid var(--border); border-radius: 6px; padding: 10px;
+             font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.82rem;
+             resize: vertical; }
+  .btn-row { display: flex; gap: 8px; margin-top: 10px; }
+  button.run { background: var(--accent); color: #fff; border: none; padding: 8px 20px;
+               border-radius: 6px; cursor: pointer; font-weight: 600; }
+  button.run:disabled { opacity: .5; cursor: not-allowed; }
+  button.alt { background: none; border: 1px solid var(--border); color: var(--dim);
+               padding: 8px 14px; border-radius: 6px; cursor: pointer; }
+
+  /* ── Result area ────────────────── */
+  .result-area { background: var(--surface); border: 1px solid var(--border);
+                 border-radius: 8px; padding: 16px; min-height: 200px; }
+  .result-area h2 { font-size: 0.95rem; margin-bottom: 10px; }
+  .viz-meta { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+  .badge { font-size: 0.75rem; padding: 3px 10px; border-radius: 12px; }
+  .badge-chart { background: rgba(88,166,255,.15); color: var(--accent); }
+  .badge-conf  { background: rgba(63,185,80,.12); color: var(--green); }
+  .narrative-box { background: var(--bg); border: 1px solid var(--border);
+                   border-radius: 6px; padding: 12px; margin-bottom: 12px; }
+  .narrative-box p { font-size: 0.85rem; line-height: 1.5; margin-bottom: 6px; }
+  .insight { font-size: 0.82rem; color: var(--dim); padding-left: 12px;
+             border-left: 2px solid var(--accent); margin-bottom: 6px; }
+
+  /* ── Data table ─────────────────── */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+  .data-table th { text-align: left; padding: 6px 8px; background: var(--bg);
+                   border-bottom: 2px solid var(--border); position: sticky; top: 0; }
+  .data-table td { padding: 5px 8px; border-bottom: 1px solid var(--border); }
+  .table-wrap { max-height: 350px; overflow: auto; }
+  .status { color: var(--dim); font-style: italic; }
+  .error { color: var(--red); }
+</style>
+</head>
+<body>
+
+<h1>Insight Harbor — Explore (PoC Stub)</h1>
+<p class="subtitle">Schema browser + structured query runner.  <em>Full dashboard by Ian.</em></p>
+
+<div class="layout">
+
+  <!-- Sidebar: dataset/schema browser -->
+  <aside class="sidebar" id="sidebar">
+    <h2>Datasets</h2>
+    <div id="ds-list"><span class="status">Loading…</span></div>
+    <div id="col-detail" style="margin-top:14px;"></div>
+  </aside>
+
+  <!-- Main: query + results -->
+  <section class="main">
+
+    <div class="query-panel">
+      <h2>Query DSL</h2>
+      <textarea id="query-input" spellcheck="false">{
+  "dataset": "copilot_usage",
+  "group_by": ["CopilotEventData_AppHost"],
+  "aggregations": [
+    {"function": "count", "alias": "events"},
+    {"function": "sum", "column": "TokensTotal", "alias": "total_tokens"}
+  ],
+  "sort_by": [{"column": "events", "order": "desc"}],
+  "limit": 20
+}</textarea>
+      <div class="btn-row">
+        <button class="run" id="btn-run">Run Query</button>
+        <button class="alt" id="btn-viz">Run + Visualize</button>
+        <button class="alt" id="btn-clear">Clear</button>
+      </div>
+    </div>
+
+    <div class="result-area" id="result-area">
+      <h2>Results</h2>
+      <p class="status" id="result-status">Run a query to see results here.</p>
+      <div id="viz-info"></div>
+      <div id="narrative-box"></div>
+      <div id="data-view"></div>
+    </div>
+
+  </section>
+</div>
+
+<script>
+  const API = '';  // relative — same origin
+  const $ = (sel) => document.querySelector(sel);
+
+  // ── Schema sidebar ───────────────────────────────────────────────────
+  async function loadSchemas() {
+    try {
+      const res = await fetch(`${API}/api/schema`);
+      const json = await res.json();
+      const datasets = json.datasets || [];
+      const list = $('#ds-list');
+      list.innerHTML = '';
+      datasets.forEach(ds => {
+        const btn = document.createElement('button');
+        btn.className = 'ds-btn';
+        btn.textContent = ds.display_name || ds.dataset;
+        btn.dataset.id = ds.dataset;
+        btn.onclick = () => loadDatasetDetail(ds.dataset, btn);
+        list.appendChild(btn);
+      });
+    } catch (e) {
+      $('#ds-list').innerHTML = `<span class="error">Failed to load schemas</span>`;
+    }
+  }
+
+  async function loadDatasetDetail(dataset, btn) {
+    document.querySelectorAll('.ds-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    try {
+      const res = await fetch(`${API}/api/schema?dataset=${dataset}`);
+      const json = await res.json();
+      const detail = $('#col-detail');
+      detail.innerHTML = `<h2>${json.display_name || dataset}</h2>
+        <p style="font-size:.78rem;color:var(--dim);margin:4px 0 8px">${json.description || ''}</p>
+        <ul class="col-list">
+          ${(json.queryable_columns || []).map(c =>
+            `<li>${c.name} <span class="tag">${c.semantic_tag || c.type}</span></li>`
+          ).join('')}
+        </ul>`;
+
+      // Pre-fill query with dataset
+      try {
+        const q = JSON.parse($('#query-input').value);
+        q.dataset = dataset;
+        $('#query-input').value = JSON.stringify(q, null, 2);
+      } catch (_) {}
+    } catch (e) {
+      $('#col-detail').innerHTML = `<span class="error">Error loading schema</span>`;
+    }
+  }
+
+  // ── Query execution ──────────────────────────────────────────────────
+  async function runQuery(endpoint) {
+    const status = $('#result-status');
+    const vizInfo = $('#viz-info');
+    const narBox = $('#narrative-box');
+    const dataView = $('#data-view');
+
+    status.textContent = 'Executing…';
+    status.className = 'status';
+    vizInfo.innerHTML = '';
+    narBox.innerHTML = '';
+    dataView.innerHTML = '';
+
+    let body;
+    try { body = JSON.parse($('#query-input').value); }
+    catch (e) { status.textContent = 'Invalid JSON'; status.className = 'error'; return; }
+
+    if (endpoint === 'visualize') {
+      body.include_narrative = true;
+      body.include_alternatives = true;
+    }
+
+    try {
+      const res = await fetch(`${API}/api/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const json = await res.json();
+
+      if (!res.ok) {
+        status.textContent = json.error || 'Query failed';
+        status.className = 'error';
+        return;
+      }
+
+      status.textContent =
+        `${json.row_count} rows returned (${json.elapsed_ms?.toFixed(0) || '?'}ms)` +
+        (json.truncated ? ' — truncated' : '');
+
+      // Viz recommendation badge
+      if (json.visualization) {
+        const v = json.visualization;
+        vizInfo.innerHTML = `
+          <div class="viz-meta">
+            <span class="badge badge-chart">📊 ${v.chart_type}</span>
+            <span class="badge badge-conf">confidence ${(v.confidence * 100).toFixed(0)}%</span>
+            <span style="font-size:.8rem;color:var(--dim)">${v.description || ''}</span>
+          </div>`;
+        if (json.alternatives && json.alternatives.length) {
+          vizInfo.innerHTML += `<p style="font-size:.75rem;color:var(--dim)">
+            Alternatives: ${json.alternatives.map(a => a.chart_type).join(', ')}</p>`;
+        }
+      }
+
+      // Narrative
+      if (json.narrative) {
+        const n = json.narrative;
+        let html = `<div class="narrative-box">`;
+        if (n.summary) html += `<p><strong>Summary:</strong> ${n.summary}</p>`;
+        (n.insights || []).forEach(i => { html += `<div class="insight">${i}</div>`; });
+        if (n.methodology) html += `<p style="font-size:.75rem;color:var(--dim);margin-top:8px">${n.methodology}</p>`;
+        html += `</div>`;
+        narBox.innerHTML = html;
+      }
+
+      // Data table
+      if (json.data && json.data.length) {
+        const cols = json.columns || Object.keys(json.data[0]);
+        let table = `<div class="table-wrap"><table class="data-table"><thead><tr>`;
+        cols.forEach(c => { table += `<th>${c}</th>`; });
+        table += `</tr></thead><tbody>`;
+        json.data.forEach(row => {
+          table += '<tr>';
+          cols.forEach(c => { table += `<td>${row[c] ?? ''}</td>`; });
+          table += '</tr>';
+        });
+        table += `</tbody></table></div>`;
+        dataView.innerHTML = table;
+      }
+
+    } catch (e) {
+      status.textContent = `Network error: ${e.message}`;
+      status.className = 'error';
+    }
+  }
+
+  // ── Event wiring ─────────────────────────────────────────────────────
+  $('#btn-run').onclick  = () => runQuery('query');
+  $('#btn-viz').onclick  = () => runQuery('visualize');
+  $('#btn-clear').onclick = () => {
+    $('#result-status').textContent = 'Run a query to see results here.';
+    $('#result-status').className = 'status';
+    $('#viz-info').innerHTML = '';
+    $('#narrative-box').innerHTML = '';
+    $('#data-view').innerHTML = '';
+  };
+
+  loadSchemas();
+</script>
+</body>
+</html>

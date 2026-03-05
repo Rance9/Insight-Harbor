@@ -1,5 +1,5 @@
 """
-Tests for pipeline.shared.graph_client
+Tests for shared.graph_client
 """
 
 from unittest.mock import MagicMock, patch
@@ -15,7 +15,7 @@ from shared.graph_client import GraphClient, PermanentError, ThrottledError
 
 
 class TestGraphClientToken:
-    @patch("pipeline.shared.graph_client.msal.ConfidentialClientApplication")
+    @patch("shared.graph_client.msal.ConfidentialClientApplication")
     def test_successful_token_acquisition(self, mock_msal_cls):
         mock_app = MagicMock()
         mock_app.acquire_token_for_client.return_value = {
@@ -28,7 +28,7 @@ class TestGraphClientToken:
         token = client._get_token()
         assert token == "test-token-123"
 
-    @patch("pipeline.shared.graph_client.msal.ConfidentialClientApplication")
+    @patch("shared.graph_client.msal.ConfidentialClientApplication")
     def test_failed_token_raises(self, mock_msal_cls):
         mock_app = MagicMock()
         mock_app.acquire_token_for_client.return_value = {
@@ -48,7 +48,7 @@ class TestGraphClientToken:
 
 
 class TestGraphClientResponseHandling:
-    @patch("pipeline.shared.graph_client.msal.ConfidentialClientApplication")
+    @patch("shared.graph_client.msal.ConfidentialClientApplication")
     def test_429_raises_throttled(self, mock_msal_cls):
         mock_app = MagicMock()
         mock_app.acquire_token_for_client.return_value = {"access_token": "tok"}
@@ -65,7 +65,7 @@ class TestGraphClientResponseHandling:
 
         assert exc_info.value.retry_after_seconds == 60
 
-    @patch("pipeline.shared.graph_client.msal.ConfidentialClientApplication")
+    @patch("shared.graph_client.msal.ConfidentialClientApplication")
     def test_403_raises_permanent(self, mock_msal_cls):
         mock_app = MagicMock()
         mock_app.acquire_token_for_client.return_value = {"access_token": "tok"}
@@ -80,7 +80,7 @@ class TestGraphClientResponseHandling:
         with pytest.raises(PermanentError):
             client._handle_response(mock_response)
 
-    @patch("pipeline.shared.graph_client.msal.ConfidentialClientApplication")
+    @patch("shared.graph_client.msal.ConfidentialClientApplication")
     def test_500_raises_runtime(self, mock_msal_cls):
         mock_app = MagicMock()
         mock_app.acquire_token_for_client.return_value = {"access_token": "tok"}
@@ -95,7 +95,7 @@ class TestGraphClientResponseHandling:
         with pytest.raises(RuntimeError):
             client._handle_response(mock_response)
 
-    @patch("pipeline.shared.graph_client.msal.ConfidentialClientApplication")
+    @patch("shared.graph_client.msal.ConfidentialClientApplication")
     def test_200_succeeds(self, mock_msal_cls):
         mock_app = MagicMock()
         mock_app.acquire_token_for_client.return_value = {"access_token": "tok"}

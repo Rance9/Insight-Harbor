@@ -1,10 +1,15 @@
 """
 Insight Harbor — Pipeline Orchestrator (Main)
 ===============================================
-Replaces run-pipeline-local.ps1 + PAX orchestration.
+Connector-driven pipeline orchestrator.
+
+Uses the ConnectorRegistry to discover and validate enabled connectors
+before executing the pipeline.  Currently executes the Purview Audit +
+Entra connectors; additional connectors (M365 Usage Reports, Graph
+Activity Logs) will be executed as they are registered.
 
 Phases:
-  0. Resume check — pick up incomplete runs from ADLS state
+  0. Connector validation — verify enabled connectors are configured
   1. Plan partitions — divide date range into time windows
   2. Ingest — batched fan-out of process_partition sub-orchestrators
   2b. Sequential retry — failed partitions retried one-at-a-time
@@ -28,6 +33,31 @@ def _chunks(lst: list, n: int):
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
         yield lst[i : i + n]
+
+
+def _validate_connectors() -> dict:
+    """Validate all enabled connectors and return a summary.
+
+    Called once at the start of each pipeline run to ensure required
+    configuration is in place.  Non-deterministic (reads env vars),
+    but safe to call from an activity function context.
+    """
+    from shared.connectors.registry import ConnectorRegistry
+
+    registry = ConnectorRegistry.instance()
+    enabled = registry.get_enabled()
+    validation = registry.validate_all()
+
+    return {
+        "connectors_registered": registry.names,
+        "connectors_enabled": [c.name for c in enabled],
+        "connector_statuses": registry.list_enabled(),
+        "validation_errors": {
+            name: errors
+            for name, errors in validation.items()
+            if errors
+        },
+    }
 
 
 def pipeline_orchestrator(ctx: df.DurableOrchestrationContext):
@@ -56,6 +86,16 @@ def pipeline_orchestrator(ctx: df.DurableOrchestrationContext):
     input_data = ctx.get_input() or {}
     start_time = ctx.current_utc_datetime
     overwrite = input_data.get("overwrite", False)
+
+    # ── PHASE 0: Connector Validation ─────────────────────────────────────
+    # Validate that all enabled connectors have required configuration.
+    # This runs in the orchestrator context (lightweight — just env checks).
+    connector_info = _validate_connectors()
+    if connector_info["validation_errors"]:
+        logger.warning(
+            "Connector validation warnings: %s",
+            connector_info["validation_errors"],
+        )
 
     # ── PHASE 0 + 1: Plan Partitions (with resume check) ─────────────────
     plan_result = yield ctx.call_activity(
@@ -296,6 +336,7 @@ def pipeline_orchestrator(ctx: df.DurableOrchestrationContext):
         "total_records_ingested": total_records_ingested,
         "total_records_exploded": total_records_exploded,
         "total_records_silver": total_records_silver,
+        "connectors": connector_info,
     }
 
 

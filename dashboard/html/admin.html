@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insight Harbor — Admin Console</title>
+    <style>
+        :root {
+            --bg: #0f172a; --surface: #1e293b; --border: #334155;
+            --text: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8;
+            --ok: #4ade80; --warn: #fbbf24; --err: #f87171;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+               background: var(--bg); color: var(--text); padding: 2rem; }
+        h1 { font-size: 1.5rem; margin-bottom: .25rem; }
+        .subtitle { color: var(--muted); font-size: .875rem; margin-bottom: 1.5rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+                gap: 1.25rem; margin-bottom: 2rem; }
+        .card { background: var(--surface); border: 1px solid var(--border);
+                border-radius: .5rem; padding: 1.25rem; }
+        .card h2 { font-size: 1rem; margin-bottom: .75rem; display: flex;
+                    align-items: center; gap: .5rem; }
+        .badge { display: inline-block; padding: .125rem .5rem; border-radius: 9999px;
+                 font-size: .75rem; font-weight: 600; }
+        .badge-ok   { background: var(--ok);   color: #064e3b; }
+        .badge-warn { background: var(--warn); color: #78350f; }
+        .badge-err  { background: var(--err);  color: #7f1d1d; }
+        table { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: .5rem; }
+        th, td { text-align: left; padding: .35rem .5rem; border-bottom: 1px solid var(--border); }
+        th { color: var(--muted); font-weight: 500; }
+        .mono { font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: .8rem; }
+        .loading { color: var(--muted); font-style: italic; }
+        #error-banner { display: none; background: #7f1d1d; color: #fecaca;
+                        padding: .75rem 1rem; border-radius: .375rem; margin-bottom: 1rem; }
+        button { background: var(--accent); color: #0c4a6e; border: none; border-radius: .375rem;
+                 padding: .5rem 1rem; cursor: pointer; font-weight: 600; font-size: .85rem; }
+        button:hover { opacity: .85; }
+        .ts { color: var(--muted); font-size: .75rem; margin-top: .5rem; }
+    </style>
+</head>
+<body>
+    <h1>Insight Harbor Admin Console</h1>
+    <p class="subtitle">Pipeline health, connectors, and run history — integration stub for Ian's dashboard</p>
+
+    <div id="error-banner"></div>
+
+    <div class="grid">
+        <!-- System Health -->
+        <div class="card">
+            <h2>System Health <span id="health-badge" class="badge loading">...</span></h2>
+            <table>
+                <thead><tr><th>Check</th><th>Status</th><th>Detail</th></tr></thead>
+                <tbody id="health-body"><tr><td colspan="3" class="loading">Loading...</td></tr></tbody>
+            </table>
+            <p class="ts" id="health-ts"></p>
+        </div>
+
+        <!-- Connectors -->
+        <div class="card">
+            <h2>Data Connectors</h2>
+            <table>
+                <thead><tr><th>Connector</th><th>Status</th><th>Source</th><th>Version</th></tr></thead>
+                <tbody id="connectors-body"><tr><td colspan="4" class="loading">Loading...</td></tr></tbody>
+            </table>
+            <p class="ts" id="connectors-ts"></p>
+        </div>
+
+        <!-- Recent Runs -->
+        <div class="card" style="grid-column: 1 / -1;">
+            <h2>Recent Pipeline Runs</h2>
+            <table>
+                <thead><tr><th>Run ID</th><th>Status</th><th>Started</th><th>Records</th><th>Duration</th></tr></thead>
+                <tbody id="runs-body"><tr><td colspan="5" class="loading">Loading...</td></tr></tbody>
+            </table>
+            <p class="ts" id="runs-ts"></p>
+        </div>
+    </div>
+
+    <button onclick="refreshAll()">Refresh All</button>
+
+    <script>
+        // ── Config ──────────────────────────────────────────────────────────
+        // In production, the SWA proxies /api/* to the Function App.
+        const API_BASE = '/api';
+
+        // For local dev, you can override:
+        // const API_BASE = 'http://localhost:7071/api';
+
+        function getAuthHeader() {
+            // In production, SWA injects the token via /.auth/me
+            // For the stub, we pass no token when auth is disabled
+            return {};
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('error-banner');
+            el.textContent = msg;
+            el.style.display = 'block';
+        }
+
+        function badgeClass(status) {
+            if (status === 'ok' || status === 'completed' || status === 'succeeded') return 'badge-ok';
+            if (status === 'warning' || status === 'running' || status === 'degraded') return 'badge-warn';
+            return 'badge-err';
+        }
+
+        // ── Health ──────────────────────────────────────────────────────────
+        async function loadHealth() {
+            try {
+                const res = await fetch(`${API_BASE}/admin/health`, { headers: getAuthHeader() });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+
+                const badge = document.getElementById('health-badge');
+                badge.textContent = data.status;
+                badge.className = `badge ${badgeClass(data.status)}`;
+
+                const tbody = document.getElementById('health-body');
+                tbody.innerHTML = '';
+                for (const [name, check] of Object.entries(data.checks || {})) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${name}</td>
+                        <td><span class="badge ${badgeClass(check.status)}">${check.status}</span></td>
+                        <td class="mono">${check.detail || check.account || check.rows || ''}</td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+                document.getElementById('health-ts').textContent = `Updated: ${data.timestamp}`;
+            } catch (e) {
+                document.getElementById('health-body').innerHTML =
+                    `<tr><td colspan="3" style="color:var(--err)">${e.message}</td></tr>`;
+            }
+        }
+
+        // ── Connectors ──────────────────────────────────────────────────────
+        async function loadConnectors() {
+            try {
+                const res = await fetch(`${API_BASE}/admin/connectors`, { headers: getAuthHeader() });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+
+                const tbody = document.getElementById('connectors-body');
+                tbody.innerHTML = '';
+                for (const c of data.connectors || []) {
+                    const tr = document.createElement('tr');
+                    const statusBadge = c.configured
+                        ? '<span class="badge badge-ok">configured</span>'
+                        : '<span class="badge badge-err">misconfigured</span>';
+                    tr.innerHTML = `
+                        <td>${c.display_name || c.name}</td>
+                        <td>${statusBadge}</td>
+                        <td class="mono">${c.source_type || ''}</td>
+                        <td>${c.version || ''}</td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+                document.getElementById('connectors-ts').textContent = `Updated: ${data.generatedAt}`;
+            } catch (e) {
+                document.getElementById('connectors-body').innerHTML =
+                    `<tr><td colspan="4" style="color:var(--err)">${e.message}</td></tr>`;
+            }
+        }
+
+        // ── Runs ────────────────────────────────────────────────────────────
+        async function loadRuns() {
+            try {
+                const res = await fetch(`${API_BASE}/admin/runs?limit=10`, { headers: getAuthHeader() });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+
+                const tbody = document.getElementById('runs-body');
+                tbody.innerHTML = '';
+
+                if (!data.runs || data.runs.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="loading">No runs recorded yet</td></tr>';
+                } else {
+                    for (const run of data.runs) {
+                        const tr = document.createElement('tr');
+                        const status = run.status || run.overall_status || 'unknown';
+                        tr.innerHTML = `
+                            <td class="mono">${run.run_id || run._blob || '—'}</td>
+                            <td><span class="badge ${badgeClass(status)}">${status}</span></td>
+                            <td>${run.started_at || run.start_time || '—'}</td>
+                            <td>${run.total_records ?? run.records ?? '—'}</td>
+                            <td>${run.duration_seconds ? run.duration_seconds + 's' : '—'}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    }
+                }
+                document.getElementById('runs-ts').textContent = `Updated: ${data.generatedAt}`;
+            } catch (e) {
+                document.getElementById('runs-body').innerHTML =
+                    `<tr><td colspan="5" style="color:var(--err)">${e.message}</td></tr>`;
+            }
+        }
+
+        // ── Init ────────────────────────────────────────────────────────────
+        function refreshAll() {
+            loadHealth();
+            loadConnectors();
+            loadRuns();
+        }
+        refreshAll();
+    </script>
+</body>
+</html>

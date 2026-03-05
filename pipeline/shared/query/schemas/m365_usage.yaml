@@ -1,0 +1,204 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Insight Harbor — M365 Usage Reports Silver Schema
+# ──────────────────────────────────────────────────────────────────────────────
+# Source connector: m365_usage
+# Silver path:     silver/m365-usage/silver_m365_usage.csv
+
+dataset: m365_usage
+display_name: M365 Usage Reports
+connector: m365_usage
+silver_path: silver/m365-usage/silver_m365_usage.csv
+description: >
+  Per-user M365 workload adoption and usage metrics aggregated from
+  Graph Reports API. Covers Teams, Exchange, SharePoint, OneDrive,
+  and M365 app adoption. Multiple report types unified into a single
+  schema with report-specific metric columns.
+grain: one row per user per report type
+refresh: daily (pipeline schedule)
+
+columns:
+  # ── Identity ───────────────────────────────────────────────────────────
+  - name: UserPrincipalName
+    type: string
+    description: User's UPN.
+    semantic: user_id
+    queryable: true
+  - name: DisplayName
+    type: string
+    description: User's display name.
+    semantic: label
+    queryable: true
+
+  # ── Report metadata ────────────────────────────────────────────────────
+  - name: ReportType
+    type: string
+    description: Source report key (e.g. "teams_user_activity", "email_activity").
+    semantic: category
+    queryable: true
+    common_values:
+      - m365_app_user_detail
+      - teams_user_activity
+      - email_activity
+      - sharepoint_activity
+      - onedrive_activity
+  - name: ReportPeriod
+    type: string
+    description: Report aggregation period (e.g. "7", "30").
+    semantic: category
+  - name: ReportRefreshDate
+    type: date
+    description: Date the report data was last refreshed.
+    semantic: date
+  - name: LastActivityDate
+    type: date
+    description: Date of user's most recent activity.
+    semantic: date
+    queryable: true
+  - name: IsDeleted
+    type: string
+    description: Whether the user account is deleted.
+    semantic: flag
+  - name: IsLicensed
+    type: string
+    description: Whether the user is licensed.
+    semantic: flag
+    queryable: true
+
+  # ── App adoption (m365_app_user_detail) ────────────────────────────────
+  - name: HasTeams
+    type: string
+    description: Whether user has Teams ("Yes"/"No").
+    semantic: flag
+    queryable: true
+  - name: HasOutlook
+    type: string
+    description: Whether user has Outlook.
+    semantic: flag
+    queryable: true
+  - name: HasWord
+    type: string
+    description: Whether user has Word.
+    semantic: flag
+  - name: HasExcel
+    type: string
+    description: Whether user has Excel.
+    semantic: flag
+  - name: HasPowerPoint
+    type: string
+    description: Whether user has PowerPoint.
+    semantic: flag
+  - name: HasOneNote
+    type: string
+    description: Whether user has OneNote.
+    semantic: flag
+  - name: HasOneDrive
+    type: string
+    description: Whether user has OneDrive.
+    semantic: flag
+  - name: HasSharePoint
+    type: string
+    description: Whether user has SharePoint.
+    semantic: flag
+
+  # ── Teams metrics ──────────────────────────────────────────────────────
+  - name: TeamsChatMessageCount
+    type: integer
+    description: Number of Teams chat messages sent.
+    semantic: measure
+    queryable: true
+  - name: TeamsCallCount
+    type: integer
+    description: Number of Teams calls.
+    semantic: measure
+    queryable: true
+  - name: TeamsMeetingCount
+    type: integer
+    description: Number of Teams meetings attended.
+    semantic: measure
+    queryable: true
+  - name: TeamsPrivateChatMessageCount
+    type: integer
+    description: Number of private chat messages.
+    semantic: measure
+
+  # ── Email metrics ──────────────────────────────────────────────────────
+  - name: EmailSendCount
+    type: integer
+    description: Number of emails sent.
+    semantic: measure
+    queryable: true
+  - name: EmailReceiveCount
+    type: integer
+    description: Number of emails received.
+    semantic: measure
+    queryable: true
+  - name: EmailReadCount
+    type: integer
+    description: Number of emails read.
+    semantic: measure
+
+  # ── SharePoint metrics ─────────────────────────────────────────────────
+  - name: SharePointFileViewedOrEdited
+    type: integer
+    description: SharePoint files viewed or edited.
+    semantic: measure
+    queryable: true
+  - name: SharePointFileSynced
+    type: integer
+    description: SharePoint files synced.
+    semantic: measure
+  - name: SharePointFileSharedInternally
+    type: integer
+    description: SharePoint files shared internally.
+    semantic: measure
+  - name: SharePointFileSharedExternally
+    type: integer
+    description: SharePoint files shared externally.
+    semantic: measure
+  - name: SharePointPagesVisited
+    type: integer
+    description: SharePoint pages visited.
+    semantic: measure
+
+  # ── OneDrive metrics ───────────────────────────────────────────────────
+  - name: OneDriveFileViewedOrEdited
+    type: integer
+    description: OneDrive files viewed or edited.
+    semantic: measure
+    queryable: true
+  - name: OneDriveFileSynced
+    type: integer
+    description: OneDrive files synced.
+    semantic: measure
+  - name: OneDriveFileSharedInternally
+    type: integer
+    description: OneDrive files shared internally.
+    semantic: measure
+  - name: OneDriveFileSharedExternally
+    type: integer
+    description: OneDrive files shared externally.
+    semantic: measure
+
+  # ── Metadata ───────────────────────────────────────────────────────────
+  - name: _SourceReport
+    type: string
+    description: Source report key (same as ReportType).
+    semantic: metadata
+  - name: _ReportDate
+    type: date
+    description: Report refresh date (same as ReportRefreshDate).
+    semantic: metadata
+  - name: _LoadedAtUtc
+    type: datetime
+    description: Pipeline load timestamp.
+    semantic: metadata
+
+aliases:
+  m365 usage: "dataset = 'm365_usage'"
+  teams activity: "filter ReportType = 'teams_user_activity'"
+  email activity: "filter ReportType = 'email_activity'"
+  sharepoint activity: "filter ReportType = 'sharepoint_activity'"
+  onedrive activity: "filter ReportType = 'onedrive_activity'"
+  app adoption: "filter ReportType = 'm365_app_user_detail'"
+  most active teams users: "filter ReportType = 'teams_user_activity' sort by TeamsChatMessageCount desc"
+  top email senders: "filter ReportType = 'email_activity' sort by EmailSendCount desc"
