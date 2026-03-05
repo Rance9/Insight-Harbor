@@ -1,0 +1,34 @@
+{
+  "version": "2.0",
+  "logging": {
+    "applicationInsights": {
+      "samplingSettings": {
+        "isEnabled": true,
+        "excludedTypes": "Request"
+      }
+    },
+    "logLevel": {
+      "default": "Information",
+      "Host.Results": "Error",
+      "Function": "Information",
+      "Host.Aggregator": "Trace"
+    }
+  },
+  "functionTimeout": "00:10:00",
+  "extensions": {
+    "durableTask": {
+      "hubName": "%IH_DURABLE_TASK_HUB%",
+      "storageProvider": {
+        "maxQueuePollingInterval": "00:00:05"
+      },
+      "maxConcurrentActivityFunctions": 4,
+      "maxConcurrentOrchestratorFunctions": 2
+    },
+    "http": {
+      "routePrefix": "api"
+    }
+  },
+  "concurrency": {
+    "dynamicConcurrencyEnabled": false
+  }
+}

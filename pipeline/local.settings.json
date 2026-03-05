@@ -1,0 +1,38 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "AzureWebJobsFeatureFlags": "EnableWorkerIndexing",
+    "PYTHON_ISOLATE_WORKER_DEPENDENCIES": "1",
+
+    "IH_ADLS_ACCOUNT_NAME": "ihstoragepoc01",
+    "IH_ADLS_CONTAINER": "insight-harbor",
+
+    "IH_TENANT_ID": "579e8f66-10ec-4646-a923-b9dc013cc0a7",
+    "IH_CLIENT_ID": "01e187b7-264a-4ce1-8cc1-32c977e0a302",
+    "IH_CLIENT_SECRET": "",
+
+    "IH_DEFAULT_LOOKBACK_DAYS": "1",
+    "IH_PARTITION_HOURS": "6",
+    "IH_MAX_CONCURRENCY": "4",
+    "IH_TARGET_RECORDS_PER_BLOCK": "5000",
+    "IH_ACTIVITY_TYPES": "CopilotInteraction",
+    "IH_EXPLOSION_MODE": "raw",
+    "IH_SUBDIVISION_THRESHOLD": "950000",
+    "IH_POLL_MIN_SECONDS": "30",
+    "IH_POLL_MAX_SECONDS": "90",
+    "IH_MAX_POLL_ATTEMPTS": "120",
+
+    "IH_INCLUDE_M365_USAGE": "false",
+    "IH_INCLUDE_DSPM_AI": "false",
+    "IH_EXCLUDE_COPILOT_INTERACTION": "false",
+    "IH_AUTO_COMPLETENESS": "false",
+
+    "IH_GRAPH_API_VERSION": "v1.0",
+    "IH_DURABLE_TASK_HUB": "ihpipelinehub",
+    "IH_SCHEDULE_CRON": "0 0 2 * * *",
+
+    "IH_TEAMS_WEBHOOK_URL": ""
+  }
+}
