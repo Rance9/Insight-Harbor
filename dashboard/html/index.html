@@ -3,272 +3,660 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Insight Harbor — M365 Copilot Analytics</title>
+  <title>Insight Harbor — Copilot Analytics</title>
 
   <!-- Block all crawlers, search engines, and AI bots -->
   <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
   <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet" />
   <meta name="bingbot" content="noindex, nofollow" />
 
-  <!-- MSAL.js 2.x for Entra ID authentication (2.28.0 – no initialize() requirement) -->
+  <!-- MSAL.js 2.x for Entra ID authentication -->
   <script src="https://alcdn.msauth.net/browser/2.28.0/js/msal-browser.min.js"></script>
 
-  <!-- Chart.js CDN (no build step) -->
+  <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+  <!-- Chart.js datalabels plugin for Power BI-style data labels -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 
   <!-- html2canvas for PNG export -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
-  <!-- Application Insights JS SDK for client-side telemetry -->
+  <!-- Application Insights JS SDK -->
   <script src="https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js"></script>
 
   <style>
-    /* ── Design tokens ── */
+    /* ══════════════════════════════════════════════════════════
+       DESIGN TOKENS
+       ══════════════════════════════════════════════════════════ */
     :root {
-      --bg:       #0f1117;
-      --surface:  #1a1d2e;
-      --surface2: #242740;
-      --border:   #2e3158;
-      --accent:   #6c63ff;
-      --accent2:  #38bdf8;
-      --text:     #e2e8f0;
-      --text-dim: #94a3b8;
-      --green:    #22c55e;
-      --amber:    #f59e0b;
-      --red:      #ef4444;
-      --radius:   12px;
-      --shadow:   0 4px 24px rgba(0,0,0,.4);
+      --bg: #F2F2F2;
+      --surface: #FFFFFF;
+      --border: #DEE2E6;
+      --border-light: #EBEBEB;
+      --accent-bar: #2C1A4E;
+      --purple-900: #1B0D3F;
+      --purple-800: #2D1566;
+      --purple-700: #3B1A6E;
+      --purple-600: #4B2D8E;
+      --purple-500: #6B4FA2;
+      --purple-400: #8B73B6;
+      --purple-300: #AB97CC;
+      --purple-200: #C9BDE0;
+      --purple-100: #E8E0F3;
+      --text: #252423;
+      --text-secondary: #605E5C;
+      --text-light: #A19F9D;
+      --green: #107C10;
+      --amber: #8A6914;
+      --red: #C42B1C;
+      --font: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      --header-height: 52px;
+      --filter-width: 220px;
+      --segment-m365: #1976D2;
+      --segment-unlicensed: #C2185B;
+      --segment-combined: #4B2D8E;
     }
 
+    /* ══════════════════════════════════════════════════════════
+       RESET
+       ══════════════════════════════════════════════════════════ */
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
+    html, body { height: 100%; overflow: hidden; }
     body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-family: var(--font);
       background: var(--bg);
       color: var(--text);
-      min-height: 100vh;
+      font-size: 14px;
     }
 
-    /* ── Header ── */
-    header {
+    /* ══════════════════════════════════════════════════════════
+       ACCENT BAR & HEADER
+       ══════════════════════════════════════════════════════════ */
+    .accent-bar {
+      height: 4px;
+      background: var(--accent-bar);
+      width: 100%;
+    }
+
+    .dashboard-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 1.25rem 2rem;
+      padding: 0 1.5rem;
       background: var(--surface);
       border-bottom: 1px solid var(--border);
+      height: var(--header-height);
     }
 
-    .logo {
+    .header-left {
       display: flex;
       align-items: center;
-      gap: .75rem;
-      font-size: 1.2rem;
-      font-weight: 700;
+      gap: 0.75rem;
+    }
+    .header-icon { width: 28px; height: 28px; }
+    .header-left h1 {
+      font-size: 1.25rem;
+      font-weight: 400;
       color: var(--text);
     }
+    .header-left h1 strong { font-weight: 600; }
 
-    .logo svg { width: 28px; height: 28px; }
-
-    .header-meta {
+    .header-right {
       display: flex;
       align-items: center;
-      gap: 1rem;
-      font-size: .8rem;
-      color: var(--text-dim);
+      gap: 0.75rem;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
     }
-
-    .status-badge {
-      padding: .25rem .75rem;
-      border-radius: 999px;
+    .header-meta-text {
+      font-size: 0.72rem;
+      color: var(--text-light);
+    }
+    .header-status-badge {
+      font-size: 0.68rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 10px;
       font-weight: 600;
-      font-size: .75rem;
     }
-    .status-badge.fresh  { background: rgba(34,197,94,.15); color: var(--green); }
-    .status-badge.stale  { background: rgba(245,158,11,.15); color: var(--amber); }
-    .status-badge.no-data { background: rgba(239,68,68,.15); color: var(--red); }
+    .header-status-badge.fresh  { background: #dff6dd; color: var(--green); }
+    .header-status-badge.stale  { background: #fff4ce; color: var(--amber); }
+    .header-status-badge.no-data { background: #fde7e9; color: var(--red); }
 
-    /* ── Main layout ── */
-    main {
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .user-avatar {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: var(--purple-600);
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.65rem; font-weight: 700;
+    }
+
+    .btn-sign-out-sm {
+      padding: 0.2rem 0.6rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 0.7rem;
+      cursor: pointer;
+      font-family: var(--font);
+    }
+    .btn-sign-out-sm:hover { background: var(--bg); }
+
+    .btn-back {
+      width: 32px; height: 32px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      color: var(--text-secondary);
+    }
+    .btn-back:hover { background: var(--bg); }
+    .btn-back svg { width: 20px; height: 20px; }
+
+    /* ══════════════════════════════════════════════════════════
+       BREADCRUMB
+       ══════════════════════════════════════════════════════════ */
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+    }
+    .breadcrumb-item {
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+    .breadcrumb-item:hover {
+      color: var(--text);
+      text-decoration: underline;
+    }
+    .breadcrumb-item.active {
+      color: var(--text);
+      font-weight: 600;
+      cursor: default;
+    }
+    .breadcrumb-item.active:hover { text-decoration: none; }
+    .breadcrumb-sep {
+      color: var(--text-light);
+      font-size: 0.75rem;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       APP SHELL
+       ══════════════════════════════════════════════════════════ */
+    #app-shell {
+      display: none;
+      flex-direction: column;
+      height: 100vh;
+    }
+    #app-shell.visible { display: flex; }
+
+    #app-content {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       HUB — HERO HEADER
+       ══════════════════════════════════════════════════════════ */
+    .hub-scroll {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
+    }
+
+    .hub-hero {
+      background: linear-gradient(135deg, #0D0620 0%, var(--purple-900) 30%, var(--purple-700) 70%, #2D1566 100%);
+      padding: 2.5rem 2rem 2rem;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+    .hub-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 10% 90%, rgba(107,79,162,0.25) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 60% at 90% 20%, rgba(59,26,110,0.3) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hub-hero-content {
       max-width: 1400px;
       margin: 0 auto;
-      padding: 2rem;
-    }
-
-    /* ── KPI cards ── */
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .kpi-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.5rem;
-      box-shadow: var(--shadow);
-      transition: transform .15s;
-    }
-    .kpi-card:hover { transform: translateY(-2px); }
-
-    .kpi-label {
-      font-size: .75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      color: var(--text-dim);
-      margin-bottom: .5rem;
-    }
-
-    .kpi-value {
-      font-size: 2rem;
-      font-weight: 800;
-      line-height: 1;
-      color: var(--text);
-    }
-
-    .kpi-sub {
-      font-size: .8rem;
-      color: var(--text-dim);
-      margin-top: .4rem;
-    }
-
-    .kpi-accent { color: var(--accent); }
-    .kpi-accent2 { color: var(--accent2); }
-    .kpi-green  { color: var(--green); }
-
-    /* ── Chart grid ── */
-    .chart-grid {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-    .chart-grid-3 {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 1rem;
-    }
-
-    @media (max-width: 900px) {
-      .chart-grid, .chart-grid-3 { grid-template-columns: 1fr; }
-    }
-
-    .chart-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.5rem;
-      box-shadow: var(--shadow);
-    }
-
-    .chart-title {
-      font-size: .85rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      color: var(--text-dim);
-      margin-bottom: 1.25rem;
-    }
-
-    .chart-canvas-wrap {
       position: relative;
-      width: 100%;
+      z-index: 1;
+    }
+    .hub-hero h2 {
+      font-size: 1.75rem;
+      font-weight: 300;
+      margin-bottom: 0.3rem;
+      letter-spacing: -0.01em;
+    }
+    .hub-hero h2 strong { font-weight: 700; }
+    .hub-hero-subtitle {
+      font-size: 0.85rem;
+      opacity: 0.6;
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.02em;
     }
 
-    /* ── Department table ── */
-    .dept-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: .85rem;
+    .hub-kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
     }
-    .dept-table th {
-      text-align: left;
-      padding: .5rem .75rem;
-      color: var(--text-dim);
-      font-weight: 600;
-      font-size: .75rem;
+    .hub-kpi-card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 1.1rem 1.25rem 0.9rem;
+      transition: background 0.2s, border-color 0.2s, transform 0.2s;
+    }
+    .hub-kpi-card:hover {
+      background: rgba(255, 255, 255, 0.14);
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-2px);
+    }
+    .hub-kpi-value {
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
+    .hub-kpi-label {
+      font-size: 0.72rem;
+      opacity: 0.55;
+      margin-top: 0.2rem;
       text-transform: uppercase;
-      letter-spacing: .05em;
-      border-bottom: 1px solid var(--border);
+      letter-spacing: 0.04em;
+      font-weight: 500;
     }
-    .dept-table td {
-      padding: .6rem .75rem;
-      border-bottom: 1px solid rgba(46,49,88,.5);
+    .hub-kpi-sparkline {
+      margin-top: 0.5rem;
+      line-height: 0;
     }
-    .dept-table tr:last-child td { border-bottom: none; }
-    .dept-table tr:hover td { background: rgba(255,255,255,.03); }
+    .hub-kpi-sparkline svg {
+      display: block;
+      width: 100%;
+    }
 
-    .bar-cell {
+    /* ══════════════════════════════════════════════════════════
+       HUB — SEGMENT SELECTOR
+       ══════════════════════════════════════════════════════════ */
+    .segment-selector {
+      display: flex;
+      gap: 0.5rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0.6rem 2rem;
+    }
+    .segment-tab {
+      padding: 0.5rem 1.25rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border: 1px solid transparent;
+      background: transparent;
+      border-radius: 20px;
+      transition: all 0.2s;
+      font-family: var(--font);
+    }
+    .segment-tab:hover {
+      color: var(--text);
+      background: var(--bg);
+      border-color: var(--border);
+    }
+    .segment-tab.active {
+      color: white;
+      background: var(--purple-600);
+      border-color: var(--purple-600);
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       HUB — NAVIGATION TILES
+       ══════════════════════════════════════════════════════════ */
+    .hub-content {
+      padding: 1.5rem 2rem 2.5rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .nav-tiles {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    .nav-tile {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.4rem 1.5rem 1.25rem;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(.4,0,.2,1);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      position: relative;
+      overflow: hidden;
+    }
+    .nav-tile::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      background: var(--purple-600);
+      opacity: 0;
+      transition: opacity 0.25s;
+      border-radius: 12px 0 0 12px;
+    }
+    .nav-tile:hover {
+      box-shadow: 0 8px 24px rgba(27,13,63,0.10), 0 2px 8px rgba(0,0,0,0.06);
+      transform: translateY(-3px);
+    }
+    .nav-tile:hover::before {
+      opacity: 1;
+    }
+    .nav-tile-header {
       display: flex;
       align-items: center;
-      gap: .5rem;
+      justify-content: space-between;
     }
-    .bar-cell-fill {
+    .nav-tile-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .nav-tile-title svg {
+      width: 20px; height: 20px;
+      color: var(--purple-600);
+      flex-shrink: 0;
+      padding: 3px;
+      background: var(--purple-100);
+      border-radius: 6px;
+      box-sizing: content-box;
+    }
+    .nav-tile-badge {
+      font-size: 0.65rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 10px;
+      background: var(--purple-100);
+      color: var(--purple-600);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .nav-tile-desc {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+    .nav-tile-viz {
+      padding: 0.35rem 0;
+      min-height: 36px;
+    }
+    .mini-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 0.3rem;
+    }
+    .mini-bar-row:last-child { margin-bottom: 0; }
+    .mini-bar-label {
+      font-size: 0.68rem;
+      color: var(--text-secondary);
+      width: 52px;
+      flex-shrink: 0;
+      text-align: right;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .mini-bar-track {
+      flex: 1;
       height: 6px;
+      background: var(--border-light);
       border-radius: 3px;
-      background: var(--accent);
-      min-width: 3px;
-      transition: width .3s ease;
+      overflow: hidden;
+    }
+    .mini-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+    .mini-bar-pct {
+      font-size: 0.62rem;
+      color: var(--text-light);
+      width: 28px;
+      text-align: right;
+    }
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .status-dot {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+    }
+    .status-dot .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .status-dot .dot.green { background: var(--green); }
+    .status-dot .dot.amber { background: var(--amber); }
+    .status-dot .dot.red   { background: var(--red); }
+    .mini-progress {
+      width: 100%;
+      height: 8px;
+      background: var(--border-light);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 0.25rem;
+    }
+    .mini-progress-fill {
+      height: 100%;
+      border-radius: 4px;
+    }
+    .mini-progress-label {
+      font-size: 0.68rem;
+      color: var(--text-secondary);
+      margin-top: 0.2rem;
+    }
+    .nav-tile-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: auto;
+      padding-top: 0.25rem;
+    }
+    .nav-tile-metric {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--purple-600);
+    }
+    .nav-tile-arrow {
+      color: var(--text-light);
+      font-size: 1.1rem;
+      transition: transform 0.2s, color 0.2s;
+    }
+    .nav-tile:hover .nav-tile-arrow {
+      transform: translateX(3px);
+      color: var(--purple-600);
     }
 
-    /* ── Loading / error states ── */
-    .loading-overlay {
+    /* ══════════════════════════════════════════════════════════
+       DATASET VIEW LAYOUT
+       ══════════════════════════════════════════════════════════ */
+    .dataset-layout {
+      display: grid;
+      grid-template-columns: 1fr var(--filter-width);
+      flex: 1;
+      min-height: 0;
+    }
+    .dataset-main {
+      padding: 0.75rem 1rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Sub-tabs for multi-view datasets ── */
+    .sub-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0.75rem;
+      flex-shrink: 0;
+    }
+    .sub-tab {
+      padding: 0.5rem 1rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+      font-family: var(--font);
+    }
+    .sub-tab:hover { color: var(--text); }
+    .sub-tab.active {
+      color: var(--purple-600);
+      border-bottom-color: var(--purple-600);
+    }
+
+    /* ── Placeholder chart cards ── */
+    .placeholder-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 0.75rem;
+      flex: 1;
+      min-height: 0;
+    }
+    .placeholder-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      min-height: 200px;
+    }
+    .placeholder-card .chart-title {
+      padding: 0.75rem 1rem 0;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .placeholder-body {
+      flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 4rem;
-      color: var(--text-dim);
+      color: var(--text-light);
+      gap: 0.5rem;
+    }
+    .placeholder-body svg {
+      width: 48px; height: 48px;
+      opacity: 0.3;
+    }
+    .placeholder-body p {
+      font-size: 0.8rem;
+      font-style: italic;
     }
 
-    .spinner {
-      width: 40px; height: 40px;
-      border: 3px solid var(--border);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-bottom: 1rem;
+    /* ── Filter Panel (right sidebar) ── */
+    .filter-panel {
+      background: #FAFAFA;
+      border-left: 1px solid var(--border);
+      padding: 0 1rem 1rem;
+      overflow-y: auto;
+      min-height: 0;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .filter-header {
+      position: sticky;
+      top: 0;
+      background: #FAFAFA;
+      padding: 0.65rem 0 0.5rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0.6rem;
+    }
+    .filter-section {
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.65rem;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .filter-section:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+    .filter-group { margin-bottom: 0.5rem; }
+    .filter-group:last-child { margin-bottom: 0; }
+    .filter-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.25rem;
+      display: block;
+    }
+    .filter-select {
+      width: 100%;
+      padding: 0.3rem 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      font-size: 0.8rem;
+      color: var(--text);
+      background: var(--surface);
+      appearance: auto;
+      cursor: pointer;
+      font-family: var(--font);
+    }
+    .filter-select:focus {
+      outline: 2px solid var(--purple-600);
+      outline-offset: -1px;
+    }
+    .filter-date {
+      width: 100%;
+      padding: 0.3rem 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      font-size: 0.8rem;
+      color: var(--text);
+      background: var(--surface);
+      font-family: var(--font);
+    }
 
-    /* ── Heatmap ── */
-    .heatmap-wrap { padding: 1rem; }
-    .heatmap-grid {
-      display: grid;
-      grid-template-columns: 50px repeat(24, 1fr);
-      gap: 2px;
-      font-size: .7rem;
-    }
-    .heatmap-grid .hm-label {
-      display: flex; align-items: center; justify-content: flex-end;
-      padding-right: 6px; color: var(--text-dim); font-weight: 500;
-    }
-    .heatmap-grid .hm-header {
-      text-align: center; color: var(--text-dim); font-weight: 500; padding: 2px 0;
-    }
-    .heatmap-grid .hm-cell {
-      aspect-ratio: 1; border-radius: 3px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: .65rem; color: rgba(255,255,255,.7);
-      transition: transform .15s;
-      cursor: default;
-    }
-    .heatmap-grid .hm-cell:hover { transform: scale(1.3); z-index: 2; }
-
-    /* ── Footer ── */
-    footer {
-      text-align: center;
-      padding: 2rem;
-      font-size: .75rem;
-      color: var(--text-dim);
-      border-top: 1px solid var(--border);
-      margin-top: 2rem;
-    }
-
-    /* ── Auth gate ── */
+    /* ══════════════════════════════════════════════════════════
+       AUTH GATE
+       ══════════════════════════════════════════════════════════ */
     #auth-gate {
       display: flex;
       flex-direction: column;
@@ -281,230 +669,99 @@
     #auth-gate .auth-logo {
       display: flex;
       align-items: center;
-      gap: .75rem;
+      gap: 0.75rem;
       font-size: 1.6rem;
       font-weight: 700;
       color: var(--text);
     }
     #auth-gate .auth-logo svg { width: 36px; height: 36px; }
     #auth-gate .auth-subtitle {
-      color: var(--text-dim);
-      font-size: .9rem;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
       margin-bottom: 1rem;
     }
     .btn-sign-in {
       display: inline-flex;
       align-items: center;
-      gap: .6rem;
-      padding: .75rem 2rem;
+      gap: 0.6rem;
+      padding: 0.75rem 2rem;
       border: none;
-      border-radius: 8px;
-      background: #2f2f2f;
+      border-radius: 4px;
+      background: var(--purple-600);
       color: #fff;
       font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
-      transition: background .2s;
+      transition: background 0.2s;
+      font-family: var(--font);
     }
-    .btn-sign-in:hover { background: #404040; }
+    .btn-sign-in:hover { background: var(--purple-700); }
     .btn-sign-in svg { width: 20px; height: 20px; }
     .auth-error {
       color: var(--red);
-      font-size: .85rem;
+      font-size: 0.85rem;
       max-width: 400px;
       text-align: center;
       display: none;
     }
     .access-denied {
       color: var(--amber);
-      font-size: .9rem;
+      font-size: 0.9rem;
       max-width: 480px;
       text-align: center;
       line-height: 1.5;
     }
-    .btn-sign-out-sm {
-      padding: .25rem .75rem;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: transparent;
-      color: var(--text-dim);
-      font-size: .75rem;
-      cursor: pointer;
-      transition: background .2s, color .2s;
-    }
-    .btn-sign-out-sm:hover { background: var(--surface2); color: var(--text); }
-    .user-badge {
-      display: flex;
-      align-items: center;
-      gap: .5rem;
-      font-size: .8rem;
-      color: var(--text-dim);
-    }
-    .user-avatar {
-      width: 26px; height: 26px;
-      border-radius: 50%;
-      background: var(--accent);
-      color: #fff;
-      display: flex; align-items: center; justify-content: center;
-      font-size: .7rem; font-weight: 700;
-    }
 
-    /* ── Department gauge cards ── */
-    .gauge-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-      justify-content: center;
-    }
-    .gauge-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 1.25rem 1rem 1rem;
-      box-shadow: var(--shadow);
+    /* ══════════════════════════════════════════════════════════
+       LOADING / ERROR STATES
+       ══════════════════════════════════════════════════════════ */
+    .loading-overlay {
       display: flex;
       flex-direction: column;
       align-items: center;
-      min-width: 140px;
-      flex: 1 1 140px;
-      max-width: 200px;
-      transition: transform .15s;
+      justify-content: center;
+      padding: 4rem;
+      color: var(--text-secondary);
     }
-    .gauge-card:hover { transform: translateY(-2px); }
-    .gauge-card svg circle.gauge-bg {
-      fill: none;
-      stroke: var(--surface2);
-      stroke-width: 8;
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--purple-600);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1rem;
     }
-    .gauge-card svg circle.gauge-fg {
-      fill: none;
-      stroke-width: 8;
-      stroke-linecap: round;
-      transition: stroke-dasharray .8s ease;
-    }
-    .gauge-label {
-      font-size: .75rem;
-      color: var(--text-dim);
-      margin-top: .5rem;
-      text-align: center;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .03em;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      max-width: 100%;
-    }
-    .gauge-value {
-      font-size: .95rem;
-      font-weight: 800;
-      fill: var(--text);
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── License mini stats ── */
-    .license-stats-row {
-      display: flex;
-      justify-content: space-around;
-      gap: .75rem;
-      margin-top: 1rem;
-      padding-top: .75rem;
-      border-top: 1px solid var(--border);
-      flex-wrap: wrap;
+    /* ══════════════════════════════════════════════════════════
+       RESPONSIVE
+       ══════════════════════════════════════════════════════════ */
+    @media (max-width: 1200px) {
+      html, body { overflow: auto; height: auto; }
+      #app-shell { height: auto; min-height: 100vh; }
+      .hub-kpi-row { grid-template-columns: repeat(2, 1fr); }
+      .nav-tiles { grid-template-columns: repeat(2, 1fr); }
+      .dataset-layout { grid-template-columns: 1fr; }
+      .dataset-main { overflow: visible; }
+      .filter-panel {
+        border-left: none;
+        border-top: 1px solid var(--border);
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 0.5rem;
+      }
+      .placeholder-grid { min-height: auto; }
+      .placeholder-card { min-height: 220px; }
     }
-    .license-stat {
-      text-align: center;
-      font-size: .75rem;
-      color: var(--text-dim);
-    }
-    .license-stat-value {
-      display: block;
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--text);
-      margin-top: .15rem;
-    }
-
-    /* ── Tab navigation ── */
-    .tab-nav { display: flex; gap: .5rem; padding: 0 2rem; margin-bottom: 1rem; }
-    .tab-btn {
-      padding: .5rem 1.25rem; border-radius: 20px; border: 1px solid var(--border);
-      background: transparent; color: var(--text-dim); cursor: pointer;
-      font-size: .85rem; transition: all .2s;
-    }
-    .tab-btn:hover { border-color: var(--accent); color: var(--text); }
-    .tab-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
-
-    /* ── Export PNG button ── */
-    .btn-export-png {
-      padding: .25rem .75rem;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: transparent;
-      color: var(--text-dim);
-      font-size: .75rem;
-      cursor: pointer;
-      transition: background .2s, color .2s;
-      display: inline-flex;
-      align-items: center;
-      gap: .35rem;
-    }
-    .btn-export-png:hover { background: var(--surface2); color: var(--text); }
-    .btn-export-png svg { width: 14px; height: 14px; }
-
-    /* ── Responsive: tablet ── */
     @media (max-width: 768px) {
-      header {
-        flex-direction: column;
-        gap: .75rem;
-        padding: 1rem;
-      }
-      .header-meta {
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-      .kpi-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      .chart-grid {
-        grid-template-columns: 1fr;
-      }
-      .chart-grid-3 {
-        grid-template-columns: 1fr;
-      }
-      .gauge-row {
-        justify-content: center;
-      }
-      .gauge-card {
-        flex: 1 1 calc(33.333% - 1rem);
-        max-width: calc(33.333% - 1rem);
-      }
-      .heatmap-grid {
-        overflow-x: auto;
-      }
-      main {
-        padding: 1rem;
-      }
-    }
-
-    /* ── Responsive: phone ── */
-    @media (max-width: 480px) {
-      .kpi-grid {
-        grid-template-columns: 1fr;
-      }
-      .gauge-card {
-        flex: 1 1 calc(50% - 1rem);
-        max-width: calc(50% - 1rem);
-      }
-      .kpi-value {
-        font-size: 1.6rem;
-      }
-      .chart-title {
-        font-size: .78rem;
-      }
-      body {
-        font-size: .9rem;
-      }
+      .hub-kpi-row { grid-template-columns: 1fr 1fr; }
+      .nav-tiles { grid-template-columns: 1fr; }
+      .placeholder-grid { grid-template-columns: 1fr; }
+      .dashboard-header { padding: 0 0.75rem; }
+      .hub-hero { padding: 1.25rem 1rem 1rem; }
+      .hub-content { padding: 1rem; }
+      .segment-selector { padding: 0 1rem; overflow-x: auto; }
+      .segment-tab { padding: 0.6rem 1rem; white-space: nowrap; }
     }
   </style>
 </head>
@@ -512,99 +769,89 @@
 
 <!-- ══════════════════════════════════════════════════════════
      CONFIGURATION
-     Edit DATA_SOURCE and API_BASE_URL below.
-     DATA_SOURCE options:
-       "api"  — live data from Azure Functions (Phase 7, requires deploy)
-       "file" — data.json in the same folder (generated by Python export script)
-     ═══════════════════════════════════════════════════════════ -->
+     ══════════════════════════════════════════════════════════ -->
 <script>
-  // Auto-detect API URL: relative path when served via Front Door (ih.data-analytics.tech),
-  // direct Functions URL otherwise (SWA default hostname or localhost)
-  const _host = location.hostname;
-  const _API = (_host === "ih.data-analytics.tech" || _host === "localhost" || _host === "127.0.0.1")
+  var _host = location.hostname;
+  var _API = (_host === "ih.data-analytics.tech" || _host === "localhost" || _host === "127.0.0.1")
     ? "/api"
     : "https://ih-api-poc01.azurewebsites.net/api";
 
-  const CONFIG = {
-    DATA_SOURCE:  "api",                               // "api" or "file"
+  var CONFIG = {
+    DATA_SOURCE:  "file",
     API_BASE_URL: _API,
-    DATA_FILE:    "data.json",                         // Used when DATA_SOURCE = "file"
-    REFRESH_MS:   300000                               // 5-minute auto-refresh
+    DATA_FILE:    "data.json",
+    REFRESH_MS:   300000
   };
 </script>
-<!-- ══════════════════════════════════════════════════════════ -->
 
-<!-- ── Auth gate (shown before sign-in) ── -->
+<!-- ══════════════════════════════════════════════════════════
+     AUTH GATE
+     ══════════════════════════════════════════════════════════ -->
 <div id="auth-gate">
   <div class="auth-logo">
     <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="14" cy="14" r="13" stroke="#6c63ff" stroke-width="2"/>
-      <path d="M14 6v8l5 3" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
-      <circle cx="14" cy="14" r="2" fill="#6c63ff"/>
+      <circle cx="14" cy="14" r="13" stroke="#4B2D8E" stroke-width="2"/>
+      <path d="M14 6v8l5 3" stroke="#6B4FA2" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="14" cy="14" r="2" fill="#4B2D8E"/>
     </svg>
     Insight Harbor
   </div>
   <div class="auth-subtitle">M365 Copilot Analytics Dashboard</div>
   <button class="btn-sign-in" id="btn-sign-in" onclick="signIn()">
-    <!-- Microsoft logo -->
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
     Sign in with Microsoft
   </button>
   <div class="auth-error" id="auth-error"></div>
 </div>
 
-<!-- ── App shell (hidden until authenticated) ── -->
-<div id="app-shell" style="display:none">
-<header>
-  <div class="logo">
-    <!-- Harbour icon -->
-    <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="14" cy="14" r="13" stroke="#6c63ff" stroke-width="2"/>
-      <path d="M14 6v8l5 3" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
-      <circle cx="14" cy="14" r="2" fill="#6c63ff"/>
-    </svg>
-    Insight Harbor
-  </div>
-  <div class="header-meta">
-    <div class="user-badge">
-      <div class="user-avatar" id="user-avatar"></div>
-      <span id="user-name"></span>
+<!-- ══════════════════════════════════════════════════════════
+     APP SHELL
+     ══════════════════════════════════════════════════════════ -->
+<div id="app-shell">
+  <div class="accent-bar"></div>
+  <header class="dashboard-header">
+    <div class="header-left" id="header-left">
+      <!-- Populated by JS: logo in hub mode, breadcrumb in dataset mode -->
     </div>
-    <span id="data-as-of">Loading…</span>
-    <span id="status-badge" class="status-badge">—</span>
-    <button class="btn-export-png" onclick="exportPNG()" title="Download PNG snapshot"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8m0 0l-3-3m3 3l3-3"/><path d="M3 12h10v2H3z"/></svg>PNG</button>
-    <button class="btn-sign-out-sm" onclick="signOut()">Sign out</button>
+    <div class="header-right">
+      <span id="data-as-of" class="header-meta-text"></span>
+      <span id="status-badge" class="header-status-badge"></span>
+      <div class="user-badge">
+        <div class="user-avatar" id="user-avatar"></div>
+        <span id="user-name"></span>
+      </div>
+      <button class="btn-sign-out-sm" onclick="signOut()">Sign out</button>
+      <button class="btn-back" onclick="refreshData()" title="Refresh data">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+          <path d="M3 3v5h5"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+  <div id="app-content">
+    <div class="loading-overlay" id="loading">
+      <div class="spinner"></div>
+      <p>Loading analytics&hellip;</p>
+    </div>
   </div>
-</header>
+</div>
 
-<main id="main-content">
-  <div class="loading-overlay" id="loading">
-    <div class="spinner"></div>
-    <p>Loading Copilot analytics…</p>
-  </div>
-</main>
-
-<footer>
-  Insight Harbor PoC · Data source: ADLS Gen2 <code>ihstoragepoc01/insight-harbor/silver/copilot-usage/</code>
-  · Phase 7 dashboard powered by Azure Static Web Apps + Azure Functions
-  <span id="footer-api-info"></span>
-</footer>
+<!-- ══════════════════════════════════════════════════════════
+     APPLICATION LOGIC
+     ══════════════════════════════════════════════════════════ -->
 <script>
-  // Show API URL in footer when in API mode
-  if (CONFIG.DATA_SOURCE === "api") {
-    document.getElementById('footer-api-info').innerHTML =
-      ' · API: <code>' + CONFIG.API_BASE_URL + '</code>';
-  }
-</script>
-</div> <!-- /app-shell -->
+// ─────────────────────────────────────────────────────────────
+// Disable datalabels by default (enable per-chart)
+// ─────────────────────────────────────────────────────────────
+Chart.defaults.set('plugins.datalabels', { display: false });
 
-<script>
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 // Application Insights — client-side telemetry
-// ─────────────────────────────────────────────────────────────────────────────
-let appInsights = null;
+// ─────────────────────────────────────────────────────────────
+var appInsights = null;
 try {
-  const aiConfig = {
+  var aiConfig = {
     connectionString: 'InstrumentationKey=ab758ef9-6220-40f8-899f-ab5787e2fe78;IngestionEndpoint=https://centralus-2.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/',
     enableAutoRouteTracking: true,
     disableFetchTracking: false,
@@ -616,30 +863,22 @@ try {
     appInsights = new Microsoft.ApplicationInsights.ApplicationInsights({ config: aiConfig });
     appInsights.loadAppInsights();
     appInsights.trackPageView({ name: 'Insight Harbor Dashboard' });
-    console.log('App Insights initialized');
   }
 } catch(aiErr) {
   console.warn('App Insights init skipped:', aiErr);
 }
 
-/** Track a custom event in App Insights (no-op if SDK not loaded). */
 function trackEvent(name, properties, measurements) {
-  if (appInsights) {
-    appInsights.trackEvent({ name: name }, { ...properties }, { ...measurements });
-  }
+  if (appInsights) appInsights.trackEvent({ name: name }, properties || {}, measurements || {});
 }
-
-/** Track an exception in App Insights. */
 function trackException(error, properties) {
-  if (appInsights) {
-    appInsights.trackException({ exception: error }, { ...properties });
-  }
+  if (appInsights) appInsights.trackException({ exception: error }, properties || {});
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 // MSAL Authentication
-// ─────────────────────────────────────────────────────────────────────────────
-const MSAL_CONFIG = {
+// ─────────────────────────────────────────────────────────────
+var MSAL_CONFIG = {
   auth: {
     clientId: 'e571ba41-17da-4e7b-85fb-bc6d832d4f78',
     authority: 'https://login.microsoftonline.com/579e8f66-10ec-4646-a923-b9dc013cc0a7',
@@ -652,46 +891,54 @@ const MSAL_CONFIG = {
   }
 };
 
-// Authorized group Object ID
-const AUTHORIZED_GROUP_ID = '97568a14-dd68-4292-b878-700e994b1753';
+var AUTHORIZED_GROUP_ID = '97568a14-dd68-4292-b878-700e994b1753';
+var msalApp = new msal.PublicClientApplication(MSAL_CONFIG);
+var currentAccount = null;
 
-const msalApp = new msal.PublicClientApplication(MSAL_CONFIG);
-let currentAccount = null;
-
-// On every page load, handle any pending redirect response
-msalApp.handleRedirectPromise()
-  .then(function (redirectResponse) {
-    if (redirectResponse && redirectResponse.account) {
-      currentAccount = redirectResponse.account;
-      authorizeAndLaunch(currentAccount);
-      return;
-    }
-    // Check for existing cached session
-    var accounts = msalApp.getAllAccounts();
-    if (accounts.length > 0) {
-      currentAccount = accounts[0];
-      authorizeAndLaunch(currentAccount);
-      return;
-    }
-    // No session – show sign-in button as ready
-    var btn = document.getElementById('btn-sign-in');
-    btn.disabled = false;
-  })
-  .catch(function (err) {
-    console.error('MSAL redirect error:', err);
-    var btn = document.getElementById('btn-sign-in');
-    btn.disabled = false;
-  });
+// ── Local dev bypass ──
+var _isLocalDev = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+                  && CONFIG.DATA_SOURCE === 'file';
+if (_isLocalDev) {
+  currentAccount = {
+    username: 'local-dev@localhost',
+    name: 'Local Developer',
+    tenantId: 'local',
+    idTokenClaims: { groups: [AUTHORIZED_GROUP_ID] }
+  };
+  document.getElementById('auth-gate').style.display = 'none';
+  document.getElementById('app-shell').classList.add('visible');
+  document.getElementById('user-avatar').textContent = 'LD';
+  document.getElementById('user-name').textContent = 'Local Developer';
+  init();
+} else {
+  msalApp.handleRedirectPromise()
+    .then(function(redirectResponse) {
+      if (redirectResponse && redirectResponse.account) {
+        currentAccount = redirectResponse.account;
+        authorizeAndLaunch(currentAccount);
+        return;
+      }
+      var accounts = msalApp.getAllAccounts();
+      if (accounts.length > 0) {
+        currentAccount = accounts[0];
+        authorizeAndLaunch(currentAccount);
+        return;
+      }
+      var btn = document.getElementById('btn-sign-in');
+      btn.disabled = false;
+    })
+    .catch(function(err) {
+      console.error('MSAL redirect error:', err);
+      var btn = document.getElementById('btn-sign-in');
+      btn.disabled = false;
+    });
+}
 
 function signIn() {
   var btn = document.getElementById('btn-sign-in');
   btn.disabled = true;
-  btn.textContent = 'Redirecting…';
-  // Redirect flow – navigates the whole page (no popup blocker issues)
-  msalApp.loginRedirect({
-    scopes: ['openid', 'profile', 'email'],
-    prompt: 'select_account'
-  });
+  btn.textContent = 'Redirecting\u2026';
+  msalApp.loginRedirect({ scopes: ['openid', 'profile', 'email'], prompt: 'select_account' });
 }
 
 function signOut() {
@@ -699,94 +946,75 @@ function signOut() {
 }
 
 async function authorizeAndLaunch(account) {
-  // Try to get group claims from the ID token first
-  let groups = account.idTokenClaims?.groups || [];
-
-  // If no group claims in ID token (overage), call Graph to check membership
+  var groups = account.idTokenClaims?.groups || [];
   if (groups.length === 0) {
     try {
-      const tokenResponse = await msalApp.acquireTokenSilent({
+      var tokenResponse = await msalApp.acquireTokenSilent({
         scopes: ['https://graph.microsoft.com/User.Read'],
         account: account
       });
-      const memberOf = await fetch('https://graph.microsoft.com/v1.0/me/memberOf', {
+      var memberOf = await fetch('https://graph.microsoft.com/v1.0/me/memberOf', {
         headers: { Authorization: 'Bearer ' + tokenResponse.accessToken }
-      }).then(r => r.json());
-      groups = (memberOf.value || []).map(g => g.id);
+      }).then(function(r) { return r.json(); });
+      groups = (memberOf.value || []).map(function(g) { return g.id; });
     } catch (graphErr) {
-      console.warn('Graph group check failed, falling back to token claims only:', graphErr);
+      console.warn('Graph group check failed:', graphErr);
     }
   }
 
   if (!groups.includes(AUTHORIZED_GROUP_ID)) {
-    // Not authorized
-    const gate = document.getElementById('auth-gate');
-    gate.innerHTML = `
-      <div class="auth-logo">
-        <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="14" cy="14" r="13" stroke="#6c63ff" stroke-width="2"/>
-          <path d="M14 6v8l5 3" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
-          <circle cx="14" cy="14" r="2" fill="#6c63ff"/>
-        </svg>
-        Insight Harbor
-      </div>
-      <div class="access-denied">
-        <strong>Access Denied</strong><br/>
-        Your account <strong>${account.username}</strong> is not a member of the
-        <em>InsightHarbor-Viewers</em> security group.<br/>
-        Contact your administrator for access.
-      </div>
-      <button class="btn-sign-out-sm" onclick="signOut()" style="margin-top:1rem">Sign out</button>
-    `;
+    var gate = document.getElementById('auth-gate');
+    gate.innerHTML =
+      '<div class="auth-logo">' +
+        '<svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+          '<circle cx="14" cy="14" r="13" stroke="#4B2D8E" stroke-width="2"/>' +
+          '<path d="M14 6v8l5 3" stroke="#6B4FA2" stroke-width="2" stroke-linecap="round"/>' +
+          '<circle cx="14" cy="14" r="2" fill="#4B2D8E"/>' +
+        '</svg>' +
+        'Insight Harbor' +
+      '</div>' +
+      '<div class="access-denied">' +
+        '<strong>Access Denied</strong><br/>' +
+        'Your account <strong>' + account.username + '</strong> is not a member of the ' +
+        '<em>InsightHarbor-Viewers</em> security group.<br/>' +
+        'Contact your administrator for access.' +
+      '</div>' +
+      '<button class="btn-sign-out-sm" onclick="signOut()" style="margin-top:1rem">Sign out</button>';
     return;
   }
 
-  // Authorized — show the dashboard
   document.getElementById('auth-gate').style.display = 'none';
-  document.getElementById('app-shell').style.display = 'block';
+  document.getElementById('app-shell').classList.add('visible');
 
-  // Set authenticated user context in App Insights
   if (appInsights) {
     appInsights.setAuthenticatedUserContext(account.username, account.tenantId, true);
     trackEvent('UserAuthenticated', { username: account.username });
   }
 
-  // Populate user badge
-  const name = account.name || account.username;
-  const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  var name = account.name || account.username;
+  var initials = name.split(' ').map(function(w) { return w[0]; }).join('').toUpperCase().slice(0, 2);
   document.getElementById('user-avatar').textContent = initials;
   document.getElementById('user-name').textContent = name;
 
-  // Launch dashboard
   init();
   if (CONFIG.REFRESH_MS > 0) {
-    setInterval(init, CONFIG.REFRESH_MS);
+    setInterval(refreshData, CONFIG.REFRESH_MS);
   }
 }
 
-function showAuthError(msg) {
-  const el = document.getElementById('auth-error');
-  if (el) { el.textContent = msg; el.style.display = 'block'; }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Data loading
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Acquire a fresh ID token for API authentication.
- * The Function App validates this token (audience, issuer, signature).
- */
+// ─────────────────────────────────────────────────────────────
+// Data Loading
+// ─────────────────────────────────────────────────────────────
 async function getApiHeaders() {
   if (CONFIG.DATA_SOURCE !== "api" || !currentAccount) return {};
   try {
-    const resp = await msalApp.acquireTokenSilent({
+    var resp = await msalApp.acquireTokenSilent({
       scopes: ['openid', 'profile'],
       account: currentAccount
     });
     return { 'Authorization': 'Bearer ' + resp.idToken };
   } catch (err) {
-    console.warn('Silent token acquisition failed, redirecting:', err);
+    console.warn('Silent token failed, redirecting:', err);
     msalApp.loginRedirect({ scopes: ['openid', 'profile'] });
     return {};
   }
@@ -794,606 +1022,526 @@ async function getApiHeaders() {
 
 async function fetchData() {
   if (CONFIG.DATA_SOURCE === "api") {
-    const headers = await getApiHeaders();
-    const opts = { headers };
-    const fetchStart = performance.now();
-    const [summary, trend, dept, workload, licensing, hourly] = await Promise.all([
-      fetch(`${CONFIG.API_BASE_URL}/summary`, opts).then(r => { if (!r.ok) throw new Error(`API ${r.status}`); return r.json(); }),
-      fetch(`${CONFIG.API_BASE_URL}/trend?days=30`, opts).then(r => { if (!r.ok) throw new Error(`API ${r.status}`); return r.json(); }),
-      fetch(`${CONFIG.API_BASE_URL}/department`, opts).then(r => { if (!r.ok) throw new Error(`API ${r.status}`); return r.json(); }),
-      fetch(`${CONFIG.API_BASE_URL}/workload`, opts).then(r => { if (!r.ok) throw new Error(`API ${r.status}`); return r.json(); }),
-      fetch(`${CONFIG.API_BASE_URL}/licensing`, opts).then(r => { if (!r.ok) throw new Error(`API ${r.status}`); return r.json(); }),
-      fetch(`${CONFIG.API_BASE_URL}/hourly`, opts).then(r => { if (!r.ok) throw new Error(`API ${r.status}`); return r.json(); }),
+    var headers = await getApiHeaders();
+    var opts = { headers: headers };
+    var results = await Promise.all([
+      fetch(CONFIG.API_BASE_URL + '/summary', opts).then(function(r) { if (!r.ok) throw new Error('API ' + r.status); return r.json(); }),
+      fetch(CONFIG.API_BASE_URL + '/trend?days=30', opts).then(function(r) { if (!r.ok) throw new Error('API ' + r.status); return r.json(); }),
+      fetch(CONFIG.API_BASE_URL + '/department', opts).then(function(r) { if (!r.ok) throw new Error('API ' + r.status); return r.json(); }),
+      fetch(CONFIG.API_BASE_URL + '/workload', opts).then(function(r) { if (!r.ok) throw new Error('API ' + r.status); return r.json(); }),
+      fetch(CONFIG.API_BASE_URL + '/licensing', opts).then(function(r) { if (!r.ok) throw new Error('API ' + r.status); return r.json(); }),
+      fetch(CONFIG.API_BASE_URL + '/hourly', opts).then(function(r) { if (!r.ok) throw new Error('API ' + r.status); return r.json(); })
     ]);
-    const fetchMs = Math.round(performance.now() - fetchStart);
-    trackEvent('DataFetched', { source: 'api', endpoints: '6' }, { durationMs: fetchMs, totalRecords: summary.totalRecords || 0 });
     return {
-      summary, trend: trend.trend, departments: dept.departments,
-      workloads: workload.workloads, licensing, hourly: hourly.cells || []
+      summary: results[0], trend: results[1].trend,
+      departments: results[2].departments, workloads: results[3].workloads,
+      licensing: results[4], hourly: results[5].cells || []
     };
   } else {
-    const raw = await fetch(CONFIG.DATA_FILE).then(r => r.json());
-    // data.json format (generated by powerbi-setup-guide export snippet):
-    // { totalPrompts, activeUsers, topWorkload, dataAsOf, byDepartment, byWorkload, dailyTrend }
-    const summary = {
-      totalPrompts:   raw.totalPrompts     || 0,
-      activeUsers:    raw.activeUsers      || 0,
-      topWorkload:    raw.topWorkload      || '—',
-      dataAsOf:       raw.dataAsOf         || null,
-      agentUsageRate: raw.agentUsageRate   || 0,
-      totalRecords:   raw.totalRecords     || raw.totalPrompts || 0
+    var raw = await fetch(CONFIG.DATA_FILE).then(function(r) { return r.json(); });
+    return {
+      summary: {
+        totalPrompts: raw.totalPrompts || 0,
+        activeUsers: raw.activeUsers || 0,
+        topWorkload: raw.topWorkload || '\u2014',
+        dataAsOf: raw.dataAsOf || null,
+        totalRecords: raw.totalRecords || raw.totalPrompts || 0
+      },
+      trend: Object.entries(raw.dailyTrend || {}).map(function(e) { return { date: e[0], prompts: e[1] }; }).sort(function(a, b) { return a.date.localeCompare(b.date); }).slice(-30),
+      departments: Object.entries(raw.byDepartment || {}).map(function(e) { return { department: e[0], users: e[1], prompts: 0 }; }).sort(function(a, b) { return b.users - a.users; }),
+      workloads: Object.entries(raw.byWorkload || {}).map(function(e) { return { workload: e[0], records: e[1] }; }).sort(function(a, b) { return b.records - a.records; }),
+      licensing: { tiers: [], adoptionRate: 0, copilotLicensed: 0, copilotActive: 0 },
+      hourly: []
     };
-    const trend = Object.entries(raw.dailyTrend || {})
-      .map(([date, prompts]) => ({ date, prompts }))
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .slice(-30);
-    const maxDeptPrompts = Math.max(...Object.values(raw.byDepartment || { _: 1 }));
-    const departments = Object.entries(raw.byDepartment || {})
-      .map(([d, u]) => ({ department: d, users: u, prompts: 0 }))
-      .sort((a, b) => b.users - a.users);
-    const workloads = Object.entries(raw.byWorkload || {})
-      .map(([w, r]) => ({ workload: w, records: r }))
-      .sort((a, b) => b.records - a.records);
-    const licensing = { tiers: [], adoptionRate: 0, copilotLicensed: 0, copilotActive: 0 };
-    return { summary, trend, departments, workloads, licensing, hourly: [] };
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Rendering
-// ─────────────────────────────────────────────────────────────────────────────
-function fmt(n) {
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
-  if (n >= 1_000)     return (n / 1_000).toFixed(1) + 'K';
-  return String(n);
-}
-
-function pct(r) { return (r * 100).toFixed(1) + '%'; }
-
-function renderKPIs(summary) {
-  const promptsPerUser = summary.activeUsers > 0
-    ? (summary.totalPrompts / summary.activeUsers).toFixed(1)
-    : '—';
-
-  const adoptionRate = summary.adoptionRate != null ? pct(summary.adoptionRate) : '—';
-
-  return `
-    <div class="kpi-grid">
-      <div class="kpi-card">
-        <div class="kpi-label">Total Prompts</div>
-        <div class="kpi-value kpi-accent">${fmt(summary.totalPrompts)}</div>
-        <div class="kpi-sub">Audit records ingested</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Active Users</div>
-        <div class="kpi-value kpi-accent2">${fmt(summary.activeUsers)}</div>
-        <div class="kpi-sub">Distinct Copilot users</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Prompts / User</div>
-        <div class="kpi-value">${promptsPerUser}</div>
-        <div class="kpi-sub">Utilization intensity</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Agent Usage</div>
-        <div class="kpi-value kpi-green">${pct(summary.agentUsageRate || 0)}</div>
-        <div class="kpi-sub">Interactions via agents</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Top Workload</div>
-        <div class="kpi-value" style="font-size:1.4rem">${summary.topWorkload || '—'}</div>
-        <div class="kpi-sub">By prompt volume</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Adoption Rate</div>
-        <div class="kpi-value kpi-green">${adoptionRate}</div>
-        <div class="kpi-sub">${summary.copilotActive || 0} of ${summary.copilotLicensed || 0} Copilot users</div>
-      </div>
-    </div>`;
-}
-
-function renderTrendChart(trend) {
-  const labels  = trend.map(d => d.date);
-  const prompts = trend.map(d => d.prompts || 0);
-  const users   = trend.map(d => d.users   || 0);
-
-  return `
-    <div class="chart-card">
-      <div class="chart-title">Daily Prompt Trend (last 30 days)</div>
-      <div class="chart-canvas-wrap">
-        <canvas id="trendChart" height="200"></canvas>
-      </div>
-    </div>`;
-}
-
-function renderWorkloadChart(workloads) {
-  return `
-    <div class="chart-card">
-      <div class="chart-title">By Workload</div>
-      <div class="chart-canvas-wrap">
-        <canvas id="workloadChart" height="200"></canvas>
-      </div>
-    </div>`;
-}
-
-function renderDeptTable(departments) {
-  const max = Math.max(...departments.map(d => d.prompts || d.users || 1));
-  const rows = departments.slice(0, 10).map(d => {
-    const val = d.prompts || d.users || 0;
-    const barWidth = max > 0 ? Math.round(val / max * 100) : 0;
-    const ppu = d.promptsPerUser != null ? d.promptsPerUser.toFixed(1) : '—';
-    return `
-      <tr>
-        <td>${d.department}</td>
-        <td><div class="bar-cell">
-          <div class="bar-cell-fill" style="width:${barWidth}px"></div>
-          <span>${fmt(val)}</span>
-        </div></td>
-        <td>${d.users ? fmt(d.users) : '—'}</td>
-        <td>${ppu}</td>
-      </tr>`;
-  }).join('');
-
-  return `
-    <div class="chart-card">
-      <div class="chart-title">Department Breakdown</div>
-      <table class="dept-table">
-        <thead><tr>
-          <th>Department</th>
-          <th>Prompts</th>
-          <th>Users</th>
-          <th>Per User</th>
-        </tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>`;
-}
-
-function renderLicenseChart(licensing) {
-  if (!licensing || !licensing.tiers || licensing.tiers.length === 0) return '';
-  const copLic = licensing.copilotLicensed || 0;
-  const copAct = licensing.copilotActive || 0;
-  const adoptR = licensing.adoptionRate != null ? (licensing.adoptionRate * 100).toFixed(1) + '%' : '—';
-  return `
-    <div class="chart-card">
-      <div class="chart-title">License Tier Distribution</div>
-      <div class="chart-canvas-wrap">
-        <canvas id="licenseChart" height="200"></canvas>
-      </div>
-      <div class="license-stats-row">
-        <div class="license-stat">Copilot Licensed<span class="license-stat-value">${fmt(copLic)}</span></div>
-        <div class="license-stat">Active Copilot Users<span class="license-stat-value">${fmt(copAct)}</span></div>
-        <div class="license-stat">Adoption Rate<span class="license-stat-value" style="color:var(--green)">${adoptR}</span></div>
-      </div>
-    </div>`;
-}
-
-function renderDeptGauges(departments) {
-  const top6 = departments.slice(0, 6);
-  if (top6.length === 0) return '';
-  const maxUsers = Math.max(...top6.map(d => d.users || 0), 1);
-  const r = 40, cx = 50, cy = 50, sw = 8;
-  const circumference = 2 * Math.PI * r;
-
-  const cards = top6.map(d => {
-    const users = d.users || 0;
-    const pct = Math.min(users / maxUsers, 1);
-    const dashLen = pct * circumference;
-    const color = users > 5 ? 'var(--green)' : users >= 3 ? 'var(--amber)' : 'var(--red)';
-    return `
-      <div class="gauge-card">
-        <svg viewBox="0 0 100 100" width="90" height="90">
-          <circle class="gauge-bg" cx="${cx}" cy="${cy}" r="${r}"/>
-          <circle class="gauge-fg" cx="${cx}" cy="${cy}" r="${r}"
-            stroke="${color}"
-            stroke-dasharray="0 ${circumference}"
-            transform="rotate(-90 ${cx} ${cy})"
-            data-target="${dashLen} ${circumference - dashLen}"/>
-          <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" class="gauge-value">${users}</text>
-        </svg>
-        <div class="gauge-label" title="${d.department}">${d.department}</div>
-      </div>`;
-  }).join('');
-
-  return `<div class="gauge-row">${cards}</div>`;
-}
-
-function animateGauges() {
-  document.querySelectorAll('.gauge-fg[data-target]').forEach(el => {
-    requestAnimationFrame(() => {
-      el.setAttribute('stroke-dasharray', el.dataset.target);
-    });
-  });
-}
-
-function exportPNG() {
-  const main = document.getElementById('main-content');
-  if (!main || typeof html2canvas === 'undefined') return;
-  html2canvas(main, { backgroundColor: '#0f1117', scale: 2 }).then(canvas => {
-    const link = document.createElement('a');
-    link.download = 'insight-harbor-' + new Date().toISOString().slice(0,10) + '.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-  });
-}
-
-function initCharts(trend, workloads, licensing) {
-  const palette = ['#6c63ff','#38bdf8','#22c55e','#f59e0b','#ef4444','#a855f7','#ec4899','#14b8a6'];
-
-  // Trend line
-  const trendCtx = document.getElementById('trendChart').getContext('2d');
-  new Chart(trendCtx, {
-    type: 'line',
-    data: {
-      labels: trend.map(d => d.date),
-      datasets: [{
-        label: 'Prompts',
-        data:  trend.map(d => d.prompts || 0),
-        borderColor: '#6c63ff',
-        backgroundColor: 'rgba(108,99,255,.1)',
-        fill: true,
-        tension: 0.4,
-        pointRadius: 3
-      }, {
-        label: 'Users',
-        data:  trend.map(d => d.users || 0),
-        borderColor: '#38bdf8',
-        backgroundColor: 'transparent',
-        borderDash: [4, 3],
-        tension: 0.4,
-        pointRadius: 0
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { labels: { color: '#94a3b8', boxWidth: 14 } } },
-      scales: {
-        x: { ticks: { color: '#64748b', maxTicksLimit: 8 }, grid: { color: 'rgba(46,49,88,.5)' } },
-        y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(46,49,88,.5)' } }
-      }
-    }
-  });
-
-  // Workload doughnut
-  if (workloads && workloads.length > 0) {
-    const wlCtx = document.getElementById('workloadChart').getContext('2d');
-    new Chart(wlCtx, {
-      type: 'doughnut',
-      data: {
-        labels: workloads.slice(0, 8).map(w => w.workload),
-        datasets: [{
-          data:            workloads.slice(0, 8).map(w => w.records || w.pct || 0),
-          backgroundColor: palette,
-          borderWidth: 0,
-          hoverOffset: 6
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: { color: '#94a3b8', padding: 12, boxWidth: 10, font: { size: 11 } }
-          }
-        },
-        cutout: '65%'
-      }
-    });
-  }
-
-  // License tier doughnut
-  const licEl = document.getElementById('licenseChart');
-  if (licEl && licensing && licensing.tiers && licensing.tiers.length > 0) {
-    const licCtx = licEl.getContext('2d');
-    new Chart(licCtx, {
-      type: 'doughnut',
-      data: {
-        labels: licensing.tiers.map(t => t.tier),
-        datasets: [{
-          data:            licensing.tiers.map(t => t.users),
-          backgroundColor: ['#22c55e', '#6c63ff', '#38bdf8', '#f59e0b', '#ef4444', '#a855f7'],
-          borderWidth: 0,
-          hoverOffset: 6
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: { color: '#94a3b8', padding: 12, boxWidth: 10, font: { size: 11 } }
-          }
-        },
-        cutout: '65%'
-      }
-    });
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Heatmap — hour-of-day × day-of-week
-// ─────────────────────────────────────────────────────────────────────────────
-function renderHeatmap(cells) {
-  if (!cells || cells.length === 0) return '';
-
-  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  // Build lookup: key = "dow-hour"
-  const lookup = {};
-  let maxCount = 1;
-  cells.forEach(c => {
-    const key = c.dow + '-' + c.hour;
-    lookup[key] = c.count;
-    if (c.count > maxCount) maxCount = c.count;
-  });
-
-  function cellColor(count) {
-    if (count === 0) return 'rgba(255,255,255,.04)';
-    const intensity = Math.min(count / maxCount, 1);
-    // Gradient from dim purple to bright accent
-    const r = Math.round(108 * intensity);
-    const g = Math.round(99 * (1 - intensity * 0.5));
-    const b = Math.round(255 * (0.3 + intensity * 0.7));
-    const a = 0.2 + intensity * 0.8;
-    return `rgba(${r}, ${g}, ${b}, ${a})`;
-  }
-
-  // Header row (hours 0-23)
-  let headerCells = '<div class="hm-label"></div>';
-  for (let h = 0; h < 24; h++) {
-    headerCells += `<div class="hm-header">${h}</div>`;
-  }
-
-  // Data rows (Mon-Sun)
-  let rows = '';
-  for (let d = 0; d < 7; d++) {
-    rows += `<div class="hm-label">${days[d]}</div>`;
-    for (let h = 0; h < 24; h++) {
-      const count = lookup[d + '-' + h] || 0;
-      const bg = cellColor(count);
-      rows += `<div class="hm-cell" style="background:${bg}" title="${days[d]} ${h}:00 — ${count} prompts">${count > 0 ? count : ''}</div>`;
-    }
-  }
-
-  return `
-    <div class="chart-card" style="grid-column: 1 / -1">
-      <h3>Prompt Activity Heatmap</h3>
-      <p style="font-size:.75rem;color:var(--text-dim);margin-bottom:.75rem">
-        Prompt volume by hour of day and day of week
-      </p>
-      <div class="heatmap-wrap">
-        <div class="heatmap-grid">
-          ${headerCells}
-          ${rows}
-        </div>
-      </div>
-    </div>`;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Header status
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// Header Status Badge
+// ─────────────────────────────────────────────────────────────
 function updateHeaderStatus(dataAsOf) {
-  const badge = document.getElementById('status-badge');
-  const meta  = document.getElementById('data-as-of');
-
+  var badge = document.getElementById('status-badge');
+  var meta  = document.getElementById('data-as-of');
   if (!dataAsOf) {
-    meta.textContent = 'No data';
-    badge.textContent = 'No Data';
-    badge.className = 'status-badge no-data';
+    meta.textContent = '';
+    badge.textContent = '';
+    badge.className = 'header-status-badge';
     return;
   }
-
-  const loaded = new Date(dataAsOf);
-  const ageH   = (Date.now() - loaded.getTime()) / 3_600_000;
-
-  meta.textContent = `Data as of ${loaded.toLocaleDateString()} ${loaded.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
-
+  var loaded = new Date(dataAsOf);
+  var ageH = (Date.now() - loaded.getTime()) / 3600000;
+  meta.textContent = 'Data: ' + loaded.toLocaleDateString();
   if (ageH <= 25) {
     badge.textContent = 'Fresh';
-    badge.className = 'status-badge fresh';
+    badge.className = 'header-status-badge fresh';
   } else {
-    badge.textContent = `Stale (${Math.round(ageH)}h)`;
-    badge.className = 'status-badge stale';
+    badge.textContent = 'Stale (' + Math.round(ageH) + 'h)';
+    badge.className = 'header-status-badge stale';
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Tab state & chart cleanup
-// ─────────────────────────────────────────────────────────────────────────────
-let _dashData = null;
-let _activeTab = 'overview';
-let teamsChartInstance = null;
+// ─────────────────────────────────────────────────────────────
+// DATA DEFINITIONS — Segments & Datasets
+// ─────────────────────────────────────────────────────────────
+var SEGMENTS = {
+  'm365':       { label: 'M365 Copilot',          color: '#1976D2' },
+  'unlicensed': { label: 'Copilot (Unlicensed)',   color: '#C2185B' },
+  'combined':   { label: 'Combined',               color: '#4B2D8E' }
+};
 
-function destroyTeamsChart() {
-  if (teamsChartInstance) { teamsChartInstance.destroy(); teamsChartInstance = null; }
+var ICONS = {
+  'usage-trends':          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>',
+  'leaderboard':           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="14" width="4" height="7"/><rect x="10" y="8" width="4" height="13"/><rect x="17" y="11" width="4" height="10"/></svg>',
+  'health-check':          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+  'use-cases':             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>',
+  'habit-formation':       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>',
+  'license-prioritization': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>'
+};
+
+var PLACEHOLDER_CHART_SVG = '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="4" width="40" height="40" rx="4" stroke="currentColor" stroke-width="1.5"/><polyline points="10 34 18 22 26 28 38 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="38" cy="14" r="2" fill="currentColor"/></svg>';
+
+var DATASETS = {
+  'usage-trends': {
+    title: 'Usage Trends',
+    description: 'Daily and weekly Copilot activity trends, session volumes, and active user curves',
+    views: ['Overview', 'Weekly Breakdown', 'Department Comparison'],
+    segments: ['m365', 'unlicensed', 'combined'],
+    metrics: { m365: '+12% \u2191', unlicensed: '+8% \u2191', combined: '+10% \u2191' },
+    chartTitles: {
+      0: ['Average Sessions Per User Over Time', 'Active Users by Week', 'Daily Prompt Volume', 'Workload Distribution'],
+      1: ['Week-over-Week Growth', 'Sessions by Day of Week', 'Peak Usage Hours', 'Weekly Retention'],
+      2: ['Sessions Per User by Department', 'Department Growth Rates', 'Cross-Department Adoption', 'Department Engagement Depth']
+    }
+  },
+  'leaderboard': {
+    title: 'Leaderboard',
+    description: 'Top users, departments, and agents ranked by adoption, sessions, and engagement depth',
+    views: ['Top Users', 'Top Departments', 'Top Agents', 'Rising Stars'],
+    segments: ['m365', 'unlicensed', 'combined'],
+    metrics: { m365: 'Top: Finance', unlicensed: 'Top: Marketing', combined: 'Top: Finance' },
+    chartTitles: {
+      0: ['Most Active Users', 'User Activity Timeline', 'Session Distribution', 'Power Users vs Regular'],
+      1: ['Department Rankings', 'Department Adoption Rate', 'Department Session Volume', 'Department Activity Heatmap'],
+      2: ['Most Used Agents', 'Agent Session Counts', 'Agent User Distribution', 'Agent Versatility Score'],
+      3: ['Fastest Growing Users', 'New Adopters This Month', 'Acceleration Metrics', 'Emerging Use Patterns']
+    }
+  },
+  'health-check': {
+    title: 'Health Check',
+    description: 'Pipeline status, data freshness, and ingestion monitoring',
+    views: ['Overview'],
+    segments: ['m365', 'unlicensed', 'combined'],
+    metrics: { m365: '\u25CF Healthy', unlicensed: '\u25CF Healthy', combined: '\u25CF Healthy' },
+    chartTitles: {
+      0: ['Pipeline Status', 'Data Freshness Timeline', 'Ingestion Volume Trend', 'Error Rate Monitor']
+    }
+  },
+  'use-cases': {
+    title: 'Use Cases',
+    description: 'What Copilot is being used for \u2014 by workload, task type, and scenario',
+    views: ['Overview'],
+    segments: ['m365', 'unlicensed', 'combined'],
+    metrics: { m365: 'Teams: 42%', unlicensed: 'Chat: 67%', combined: 'Teams: 38%' },
+    chartTitles: {
+      0: ['Usage by Workload', 'Top Task Categories', 'Scenario Breakdown', 'Feature Adoption Funnel']
+    }
+  },
+  'habit-formation': {
+    title: 'Habit Formation',
+    description: 'Retention cohorts, frequency streaks, and weekly active day patterns',
+    views: ['Retention Cohorts', 'Frequency Patterns', 'Sticky Users'],
+    segments: ['m365', 'unlicensed', 'combined'],
+    metrics: { m365: '38% sticky', unlicensed: '24% sticky', combined: '31% sticky' },
+    chartTitles: {
+      0: ['Weekly Retention Cohort Grid', 'Retention Rate Over Time', 'Cohort Size Trend', 'Drop-off Analysis'],
+      1: ['Sessions Per User Distribution', 'Active Days Per Week', 'Usage Frequency Trend', 'Time-of-Day Patterns'],
+      2: ['Sticky User Percentage', 'Sticky vs Casual Users', 'Stickiness Trend', 'Department Stickiness']
+    }
+  },
+  'license-prioritization': {
+    title: 'License Prioritization',
+    description: 'Identify high-engagement unlicensed users for license allocation',
+    views: ['Overview'],
+    segments: ['unlicensed', 'combined'],
+    metrics: { unlicensed: '162 candidates', combined: '162 candidates' },
+    chartTitles: {
+      0: ['License Utilization Rate', 'Top Candidates for Licensing', 'Engagement Score Distribution', 'Recommended Reallocations']
+    }
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
+// APPLICATION STATE
+// ─────────────────────────────────────────────────────────────
+var STATE = {
+  segment: 'combined',
+  view: 'hub',
+  subView: 0
+};
+
+// ─────────────────────────────────────────────────────────────
+// NAVIGATION
+// ─────────────────────────────────────────────────────────────
+function navigate(view, subView) {
+  STATE.view = view || 'hub';
+  STATE.subView = subView || 0;
+  renderApp();
+  trackEvent('Navigate', { view: STATE.view, segment: STATE.segment, subView: String(STATE.subView) });
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Tab switching
-// ─────────────────────────────────────────────────────────────────────────────
-function switchTab(tabName) {
-  _activeTab = tabName;
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.textContent.toLowerCase().includes(tabName === 'overview' ? 'overview' : 'teams'));
-  });
-  if (tabName === 'overview') {
-    renderOverviewTab();
+function setSegment(seg) {
+  STATE.segment = seg;
+  var ds = DATASETS[STATE.view];
+  if (STATE.view !== 'hub' && ds && !ds.segments.includes(seg)) {
+    STATE.view = 'hub';
+    STATE.subView = 0;
+  }
+  renderApp();
+  trackEvent('SegmentChange', { segment: seg });
+}
+
+// ─────────────────────────────────────────────────────────────
+// RENDER ORCHESTRATOR
+// ─────────────────────────────────────────────────────────────
+function renderApp() {
+  updateHeaderLeft();
+  var content = document.getElementById('app-content');
+  if (STATE.view === 'hub') {
+    content.innerHTML = renderHub();
   } else {
-    renderTeamsTab();
+    content.innerHTML = renderDatasetView();
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Overview tab (original dashboard content)
-// ─────────────────────────────────────────────────────────────────────────────
-function renderOverviewTab() {
-  destroyTeamsChart();
-  const container = document.getElementById('tab-content');
-  const { summary, trend, departments, workloads, licensing, hourly } = _dashData;
+// ─────────────────────────────────────────────────────────────
+// HEADER — LEFT SECTION
+// ─────────────────────────────────────────────────────────────
+function updateHeaderLeft() {
+  var el = document.getElementById('header-left');
+  if (!el) return;
 
-  container.innerHTML =
-    renderKPIs(summary) +
-    renderDeptGauges(departments) +
-    `<div class="chart-grid">` +
-      renderTrendChart(trend) +
-      renderWorkloadChart(workloads) +
-    `</div>` +
-    `<div class="chart-grid-3">` +
-      renderDeptTable(departments) +
-      renderLicenseChart(licensing) +
-    `</div>` +
-    renderHeatmap(hourly);
-
-  initCharts(trend, workloads, licensing);
-  animateGauges();
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Teams Deep Dive tab
-// ─────────────────────────────────────────────────────────────────────────────
-function renderTeamsTab() {
-  destroyTeamsChart();
-  const container = document.getElementById('tab-content');
-  const { workloads } = _dashData;
-
-  // Find the Teams workload entry
-  const teamsEntry = workloads.find(w =>
-    w.workload === 'MicrosoftTeams' ||
-    w.workload === 'Microsoft Teams' ||
-    (w.workload && w.workload.toLowerCase().includes('teams'))
-  );
-
-  const teamsRecords = teamsEntry ? (teamsEntry.records || 0) : 0;
-  const teamsUsers   = teamsEntry ? (teamsEntry.users || 0) : 0;
-  const totalRecords = workloads.reduce((s, w) => s + (w.records || 0), 0);
-  const teamsPct     = teamsEntry && teamsEntry.pct != null
-    ? (teamsEntry.pct * 100).toFixed(1)
-    : (totalRecords > 0 ? (teamsRecords / totalRecords * 100).toFixed(1) : '0.0');
-  const otherRecords = totalRecords - teamsRecords;
-
-  container.innerHTML = `
-    <div class="kpi-grid">
-      <div class="kpi-card">
-        <div class="kpi-label">Teams Prompts</div>
-        <div class="kpi-value kpi-accent">${fmt(teamsRecords)}</div>
-        <div class="kpi-sub">Copilot interactions in Teams</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Teams Users</div>
-        <div class="kpi-value kpi-accent2">${fmt(teamsUsers)}</div>
-        <div class="kpi-sub">Distinct Teams Copilot users</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Teams Share</div>
-        <div class="kpi-value kpi-green">${teamsPct}%</div>
-        <div class="kpi-sub">Of all Copilot prompts</div>
-      </div>
-    </div>
-
-    <div class="chart-card" style="text-align:center; padding: 2rem; margin-bottom: 1rem;">
-      <p style="font-size: 1.1rem; color: var(--accent2);">
-        Microsoft Teams accounts for <strong>${teamsPct}%</strong> of all Copilot activity
-        with <strong>${fmt(teamsUsers)}</strong> active users.
-      </p>
-    </div>
-
-    <div class="chart-grid">
-      <div class="chart-card">
-        <div class="chart-title">Teams vs Other Workloads</div>
-        <div class="chart-canvas-wrap">
-          <canvas id="teamsSplitChart" height="260"></canvas>
-        </div>
-      </div>
-      <div class="chart-card" style="display:flex; align-items:center; justify-content:center; padding: 2rem;">
-        <p style="font-size:.9rem; color:var(--text-dim); line-height:1.6; text-align:center;">
-          Per-hour Teams activity breakdown requires the <code>/api/hourly</code> endpoint with workload filtering,
-          coming in a future release.
-        </p>
-      </div>
-    </div>`;
-
-  // Initialize Teams doughnut chart
-  const splitCtx = document.getElementById('teamsSplitChart');
-  if (splitCtx) {
-    teamsChartInstance = new Chart(splitCtx.getContext('2d'), {
-      type: 'doughnut',
-      data: {
-        labels: ['Microsoft Teams', 'Other Workloads'],
-        datasets: [{
-          data: [teamsRecords, otherRecords],
-          backgroundColor: ['#6c63ff', '#242740'],
-          borderWidth: 0,
-          hoverOffset: 6
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: { color: '#94a3b8', padding: 14, boxWidth: 12, font: { size: 12 } }
-          }
-        },
-        cutout: '65%'
-      }
-    });
+  if (STATE.view === 'hub') {
+    el.innerHTML =
+      '<svg class="header-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
+        '<rect x="1" y="1" width="10" height="10" rx="1.5" fill="#E74C4C"/>' +
+        '<rect x="13" y="1" width="10" height="10" rx="1.5" fill="#8BC34A"/>' +
+        '<rect x="1" y="13" width="10" height="10" rx="1.5" fill="#42A5F5"/>' +
+        '<rect x="13" y="13" width="10" height="10" rx="1.5" fill="#FFCA28"/>' +
+      '</svg>' +
+      '<h1><strong>Insight</strong> Harbor</h1>';
+  } else {
+    var seg = SEGMENTS[STATE.segment];
+    var ds = DATASETS[STATE.view];
+    el.innerHTML =
+      '<button class="btn-back" onclick="navigate(\'hub\')" title="Back to Hub">' +
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+          '<path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/>' +
+        '</svg>' +
+      '</button>' +
+      '<div class="breadcrumb">' +
+        '<span class="breadcrumb-item" onclick="navigate(\'hub\')">Hub</span>' +
+        '<span class="breadcrumb-sep">\u203A</span>' +
+        '<span class="breadcrumb-item" onclick="navigate(\'hub\')" style="color:' + seg.color + '">' + seg.label + '</span>' +
+        '<span class="breadcrumb-sep">\u203A</span>' +
+        '<span class="breadcrumb-item active">' + ds.title + '</span>' +
+      '</div>';
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Bootstrap
-// ─────────────────────────────────────────────────────────────────────────────
-async function init() {
-  const main = document.getElementById('main-content');
+// ─────────────────────────────────────────────────────────────
+// HUB — FULL PAGE RENDERER
+// ─────────────────────────────────────────────────────────────
+function renderHub() {
+  return '<div class="hub-scroll">' +
+    renderHero() +
+    renderSegmentSelector() +
+    '<div class="hub-content">' + renderNavTiles() + '</div>' +
+  '</div>';
+}
 
+function sparklineSVG(data, color, w, h) {
+  if (!data || data.length < 2) return '';
+  var mx = Math.max.apply(null, data);
+  var mn = Math.min.apply(null, data);
+  var r = mx - mn || 1;
+  var pts = [];
+  for (var i = 0; i < data.length; i++) {
+    var x = (i / (data.length - 1)) * w;
+    var y = h - ((data[i] - mn) / r) * (h - 4) - 2;
+    pts.push(x.toFixed(1) + ',' + y.toFixed(1));
+  }
+  var last = pts[pts.length - 1].split(',');
+  // Build area fill path
+  var areaD = 'M' + pts[0];
+  for (var j = 1; j < pts.length; j++) areaD += ' L' + pts[j];
+  areaD += ' L' + w + ',' + h + ' L0,' + h + ' Z';
+  return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' +
+    '<path d="' + areaD + '" fill="' + color + '" opacity="0.15"/>' +
+    '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + color + '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<circle cx="' + last[0] + '" cy="' + last[1] + '" r="2.5" fill="' + color + '"/>' +
+  '</svg>';
+}
+
+function renderHero() {
+  var kpis = getHeroKPIs(STATE.segment);
+  var segColor = SEGMENTS[STATE.segment].color;
+  var sparkColor = 'rgba(255,255,255,0.85)';
+  var html = '<div class="hub-hero"><div class="hub-hero-content">';
+  html += '<h2><strong>Copilot</strong> Analytics</h2>';
+  html += '<div class="hub-hero-subtitle">M365 adoption insights across your organization</div>';
+  html += '<div class="hub-kpi-row">';
+  for (var i = 0; i < kpis.length; i++) {
+    html += '<div class="hub-kpi-card">';
+    html += '<div class="hub-kpi-value">' + kpis[i].value + '</div>';
+    html += '<div class="hub-kpi-label">' + kpis[i].label + '</div>';
+    if (kpis[i].spark) {
+      html += '<div class="hub-kpi-sparkline">' + sparklineSVG(kpis[i].spark, sparkColor, 160, 36) + '</div>';
+    }
+    html += '</div>';
+  }
+  html += '</div></div></div>';
+  return html;
+}
+
+function getHeroKPIs(segment) {
+  if (segment === 'm365') {
+    return [
+      { value: '1,616', label: 'Active Users', spark: [980,1050,1120,1200,1350,1480,1616] },
+      { value: '84%', label: 'Adoption Rate', spark: [62,66,70,74,78,81,84] },
+      { value: '4.9', label: 'Avg Sessions / User / Wk', spark: [3.4,3.6,3.9,4.1,4.4,4.7,4.9] },
+      { value: '<span style="color:#6FCF97">\u25CF</span> Healthy', label: 'Pipeline Status' }
+    ];
+  }
+  if (segment === 'unlicensed') {
+    return [
+      { value: '2,585', label: 'Active Users', spark: [1600,1820,2000,2150,2300,2440,2585] },
+      { value: '62%', label: 'Engagement Rate', spark: [44,48,51,54,57,60,62] },
+      { value: '3.2', label: 'Avg Sessions / User / Wk', spark: [2.0,2.3,2.5,2.7,2.9,3.0,3.2] },
+      { value: '162', label: 'License Candidates', spark: [80,95,108,122,138,150,162] }
+    ];
+  }
+  return [
+    { value: '4,201', label: 'Total Active Users', spark: [2600,2900,3200,3400,3700,3950,4201] },
+    { value: '1,616', label: 'M365 Copilot Users', spark: [980,1050,1120,1200,1350,1480,1616] },
+    { value: '2,585', label: 'Unlicensed Chat Users', spark: [1600,1820,2000,2150,2300,2440,2585] },
+    { value: '180', label: 'Agent Users', spark: [30,55,80,105,130,155,180] }
+  ];
+}
+
+function renderSegmentSelector() {
+  var keys = ['m365', 'unlicensed', 'combined'];
+  var html = '<div class="segment-selector">';
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    var seg = SEGMENTS[key];
+    var active = STATE.segment === key;
+    var cls = 'segment-tab' + (active ? ' active' : '');
+    var style = active ? ' style="background:' + seg.color + ';border-color:' + seg.color + '"' : '';
+    html += '<button class="' + cls + '"' + style + ' onclick="setSegment(\'' + key + '\')">' + seg.label + '</button>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function getMiniVizHTML(key, segment) {
+  var seg = segment;
+  var c = SEGMENTS[seg].color;
+  // ── Usage Trends: sparkline ──
+  if (key === 'usage-trends') {
+    var d = seg === 'm365' ? [320,380,350,410,460,440,510] : seg === 'unlicensed' ? [520,560,590,640,680,710,750] : [840,940,940,1050,1140,1150,1260];
+    return sparklineSVG(d, c, 140, 32);
+  }
+  // ── Leaderboard: mini ranked bars ──
+  if (key === 'leaderboard') {
+    var bars = seg === 'm365' ? [{l:'Finance',p:88},{l:'Legal',p:72},{l:'IT',p:65}] : seg === 'unlicensed' ? [{l:'Marketing',p:82},{l:'Sales',p:70},{l:'HR',p:58}] : [{l:'Finance',p:88},{l:'Marketing',p:82},{l:'Legal',p:72}];
+    var h = '';
+    for (var i = 0; i < bars.length; i++) {
+      h += '<div class="mini-bar-row">' +
+        '<span class="mini-bar-label">' + bars[i].l + '</span>' +
+        '<div class="mini-bar-track"><div class="mini-bar-fill" style="width:' + bars[i].p + '%;background:' + c + ';opacity:' + (1 - i * 0.25) + '"></div></div>' +
+        '<span class="mini-bar-pct">' + bars[i].p + '%</span></div>';
+    }
+    return h;
+  }
+  // ── Health Check: status dots ──
+  if (key === 'health-check') {
+    return '<div class="status-row">' +
+      '<span class="status-dot"><span class="dot green"></span>Ingest</span>' +
+      '<span class="status-dot"><span class="dot green"></span>Transform</span>' +
+      '<span class="status-dot"><span class="dot green"></span>API</span>' +
+      '</div>';
+  }
+  // ── Use Cases: mini horizontal bars (workloads) ──
+  if (key === 'use-cases') {
+    var uc = seg === 'm365' ? [{l:'Teams',p:42},{l:'Word',p:28},{l:'Excel',p:18}] : seg === 'unlicensed' ? [{l:'Chat',p:67},{l:'Web',p:20},{l:'Mobile',p:13}] : [{l:'Teams',p:38},{l:'Chat',p:32},{l:'Word',p:18}];
+    var h = '';
+    for (var i = 0; i < uc.length; i++) {
+      h += '<div class="mini-bar-row">' +
+        '<span class="mini-bar-label">' + uc[i].l + '</span>' +
+        '<div class="mini-bar-track"><div class="mini-bar-fill" style="width:' + uc[i].p + '%;background:' + c + ';opacity:' + (1 - i * 0.2) + '"></div></div>' +
+        '<span class="mini-bar-pct">' + uc[i].p + '%</span></div>';
+    }
+    return h;
+  }
+  // ── Habit Formation: sparkline ──
+  if (key === 'habit-formation') {
+    var d = seg === 'm365' ? [18,22,25,27,30,34,38] : seg === 'unlicensed' ? [10,12,14,16,18,21,24] : [14,17,19,22,24,27,31];
+    return sparklineSVG(d, c, 140, 32);
+  }
+  // ── License Prioritization: progress bar ──
+  if (key === 'license-prioritization') {
+    var pct = seg === 'unlicensed' ? 63 : 63;
+    return '<div class="mini-progress"><div class="mini-progress-fill" style="width:' + pct + '%;background:' + c + '"></div></div>' +
+      '<div class="mini-progress-label">' + pct + '% of candidates scored &gt;80</div>';
+  }
+  return '';
+}
+
+function renderNavTiles() {
+  var dsKeys = Object.keys(DATASETS);
+  var html = '<div class="nav-tiles">';
+  for (var i = 0; i < dsKeys.length; i++) {
+    var key = dsKeys[i];
+    var ds = DATASETS[key];
+    if (!ds.segments.includes(STATE.segment)) continue;
+    var viewCount = ds.views.length;
+    var metric = ds.metrics[STATE.segment] || '';
+    var icon = ICONS[key] || '';
+
+    html += '<div class="nav-tile" onclick="navigate(\'' + key + '\')">';
+    html += '<div class="nav-tile-header">';
+    html += '<div class="nav-tile-title">' + icon + ' ' + ds.title + '</div>';
+    if (viewCount > 1) {
+      html += '<span class="nav-tile-badge">' + viewCount + ' views</span>';
+    }
+    html += '</div>';
+    html += '<div class="nav-tile-desc">' + ds.description + '</div>';
+    html += '<div class="nav-tile-viz">' + getMiniVizHTML(key, STATE.segment) + '</div>';
+    html += '<div class="nav-tile-footer">';
+    html += '<span class="nav-tile-metric">' + metric + '</span>';
+    html += '<span class="nav-tile-arrow">\u2192</span>';
+    html += '</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+// ─────────────────────────────────────────────────────────────
+// DATASET VIEW — FULL PAGE RENDERER
+// ─────────────────────────────────────────────────────────────
+function renderDatasetView() {
+  var ds = DATASETS[STATE.view];
+  if (!ds) { STATE.view = 'hub'; return renderHub(); }
+
+  var charts = ds.chartTitles[STATE.subView] || ['Chart 1', 'Chart 2', 'Chart 3', 'Chart 4'];
+  var seg = SEGMENTS[STATE.segment];
+
+  var html = '<div class="dataset-layout">';
+  html += '<main class="dataset-main">';
+
+  // Sub-tabs (only for multi-view datasets)
+  if (ds.views.length > 1) {
+    html += '<div class="sub-tabs">';
+    for (var i = 0; i < ds.views.length; i++) {
+      var cls = 'sub-tab' + (STATE.subView === i ? ' active' : '');
+      html += '<button class="' + cls + '" onclick="navigate(\'' + STATE.view + '\',' + i + ')">' + ds.views[i] + '</button>';
+    }
+    html += '</div>';
+  }
+
+  // Segment context label
+  html += '<div style="font-size:0.75rem;color:' + seg.color + ';font-weight:600;margin-bottom:0.5rem;">' + seg.label + ' \u2014 ' + ds.title;
+  if (ds.views.length > 1) {
+    html += ' \u203A ' + ds.views[STATE.subView];
+  }
+  html += '</div>';
+
+  // Placeholder chart grid
+  html += '<div class="placeholder-grid">';
+  for (var j = 0; j < charts.length; j++) {
+    html += '<div class="placeholder-card">';
+    html += '<div class="chart-title">' + charts[j] + '</div>';
+    html += '<div class="placeholder-body">';
+    html += PLACEHOLDER_CHART_SVG;
+    html += '<p>Visualization coming soon</p>';
+    html += '</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+
+  html += '</main>';
+
+  // Filter panel
+  html += '<aside class="filter-panel">' + renderDatasetFilters() + '</aside>';
+
+  html += '</div>';
+  return html;
+}
+
+function renderDatasetFilters() {
+  return '<div class="filter-header">Filters</div>' +
+
+    '<div class="filter-section">' +
+      '<div class="filter-group">' +
+        '<label class="filter-label">Date Range</label>' +
+        '<input type="date" class="filter-date" value="2025-03-01" />' +
+        '<input type="date" class="filter-date" value="2025-06-06" style="margin-top:0.25rem" />' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="filter-section">' +
+      '<div class="filter-group">' +
+        '<label class="filter-label">Organization</label>' +
+        '<select class="filter-select"><option>All</option></select>' +
+      '</div>' +
+      '<div class="filter-group">' +
+        '<label class="filter-label">Department</label>' +
+        '<select class="filter-select"><option>All</option></select>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="filter-section">' +
+      '<div class="filter-group">' +
+        '<label class="filter-label">Usage Rank</label>' +
+        '<select class="filter-select"><option>All</option></select>' +
+      '</div>' +
+      '<div class="filter-group">' +
+        '<label class="filter-label">License Status</label>' +
+        '<select class="filter-select"><option>All</option></select>' +
+      '</div>' +
+    '</div>';
+}
+
+// ─────────────────────────────────────────────────────────────
+// DATA REFRESH
+// ─────────────────────────────────────────────────────────────
+async function refreshData() {
   try {
-    _dashData = await fetchData();
-
-    updateHeaderStatus(_dashData.summary.dataAsOf);
-
-    main.innerHTML =
-      `<div class="tab-nav">` +
-        `<button class="tab-btn${_activeTab === 'overview' ? ' active' : ''}" onclick="switchTab('overview')">Overview</button>` +
-        `<button class="tab-btn${_activeTab === 'teams' ? ' active' : ''}" onclick="switchTab('teams')">Teams Deep Dive</button>` +
-      `</div>` +
-      `<div id="tab-content"></div>`;
-
-    trackEvent('TabRendered', { tab: _activeTab });
-    if (_activeTab === 'overview') {
-      renderOverviewTab();
-    } else {
-      renderTeamsTab();
-    }
-
-  } catch (err) {
-    console.error(err);
-    trackException(err, { component: 'init', dataSource: CONFIG.DATA_SOURCE });
-    const isAuthError = err.message && err.message.includes('401');
-    const isApiMode = CONFIG.DATA_SOURCE === 'api';
-    let helpText;
-    if (isAuthError) {
-      helpText = 'Authentication failed. Your session may have expired. <a href="javascript:signOut()" style="color:var(--accent)">Sign out and sign in again</a>.';
-    } else if (isApiMode) {
-      helpText = 'Check that the Azure Functions API at <code>' + CONFIG.API_BASE_URL + '</code> is deployed and the CORS origin is configured. ' +
-        'Or edit CONFIG.DATA_SOURCE to "file" and serve <code>data.json</code> locally.';
-    } else {
-      helpText = 'Run the Python pipeline to generate <code>dashboard/html/data.json</code>, or change DATA_SOURCE to "api".';
-    }
-    main.innerHTML = `
-      <div class="loading-overlay">
-        <p style="color:var(--red)">Failed to load data: ${err.message}</p>
-        <p style="margin-top:.5rem;font-size:.85rem;color:var(--text-dim)">
-          ${helpText}
-        </p>
-      </div>`;
-
-    document.getElementById('status-badge').textContent = 'Error';
-    document.getElementById('status-badge').className = 'status-badge no-data';
-    document.getElementById('data-as-of').textContent = '—';
+    var data = await fetchData();
+    updateHeaderStatus(data.summary.dataAsOf);
+  } catch(err) {
+    console.warn('Data refresh failed:', err);
+    trackException(err, { component: 'refreshData' });
   }
 }
 
-// init() and refresh are now called by authorizeAndLaunch() after successful auth
+// ─────────────────────────────────────────────────────────────
+// INIT — entry point after authentication
+// ─────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    var data = await fetchData();
+    updateHeaderStatus(data.summary.dataAsOf);
+  } catch(err) {
+    console.warn('Initial data fetch failed:', err);
+  }
+  STATE.view = 'hub';
+  STATE.segment = 'combined';
+  STATE.subView = 0;
+  renderApp();
+  trackEvent('DashboardRendered', { version: 'hub-v1' });
+}
 </script>
 </body>
 </html>

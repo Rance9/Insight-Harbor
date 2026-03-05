@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Insight Harbor — Agents Usage Trends</title>
+
+  <!-- Block all crawlers, search engines, and AI bots -->
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
+  <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet" />
+  <meta name="bingbot" content="noindex, nofollow" />
+
+  <!-- MSAL.js 2.x for Entra ID authentication -->
+  <script src="https://alcdn.msauth.net/browser/2.28.0/js/msal-browser.min.js"></script>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+
+  <!-- Chart.js datalabels plugin for Power BI-style data labels -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+
+  <!-- html2canvas for PNG export -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <!-- Application Insights JS SDK -->
+  <script src="https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js"></script>
+
+  <style>
+    /* ── Power BI Design Tokens ── */
+    :root {
+      --bg: #F2F2F2;
+      --surface: #FFFFFF;
+      --border: #DEE2E6;
+      --border-light: #EBEBEB;
+      --accent-bar: #2C1A4E;
+      --purple-900: #1B0D3F;
+      --purple-800: #2D1566;
+      --purple-700: #3B1A6E;
+      --purple-600: #4B2D8E;
+      --purple-500: #6B4FA2;
+      --purple-400: #8B73B6;
+      --purple-300: #AB97CC;
+      --purple-200: #C9BDE0;
+      --purple-100: #E8E0F3;
+      --text: #252423;
+      --text-secondary: #605E5C;
+      --text-light: #A19F9D;
+      --green: #107C10;
+      --amber: #8A6914;
+      --red: #C42B1C;
+      --font: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      --header-height: 52px;
+      --filter-width: 220px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    /* ── Top accent bar (Power BI signature) ── */
+    .accent-bar {
+      height: 4px;
+      background: var(--accent-bar);
+      width: 100%;
+    }
+
+    /* ── Header ── */
+    .dashboard-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      height: var(--header-height);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .header-icon { width: 28px; height: 28px; }
+
+    .header-left h1 {
+      font-size: 1.25rem;
+      font-weight: 400;
+      color: var(--text);
+    }
+    .header-left h1 strong { font-weight: 600; }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .header-meta-text {
+      font-size: 0.72rem;
+      color: var(--text-light);
+    }
+
+    .header-status-badge {
+      font-size: 0.68rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    .header-status-badge.fresh  { background: #dff6dd; color: var(--green); }
+    .header-status-badge.stale  { background: #fff4ce; color: var(--amber); }
+    .header-status-badge.no-data { background: #fde7e9; color: var(--red); }
+
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .user-avatar {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: var(--purple-600);
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.65rem; font-weight: 700;
+    }
+
+    .btn-sign-out-sm {
+      padding: 0.2rem 0.6rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 0.7rem;
+      cursor: pointer;
+      font-family: var(--font);
+    }
+    .btn-sign-out-sm:hover { background: var(--bg); }
+
+    .btn-back {
+      width: 32px; height: 32px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      color: var(--text-secondary);
+    }
+    .btn-back:hover { background: var(--bg); }
+    .btn-back svg { width: 20px; height: 20px; }
+
+    /* ── App shell fills viewport ── */
+    #app-shell {
+      display: none;
+      flex-direction: column;
+      height: 100vh;
+    }
+    #app-shell.visible {
+      display: flex;
+    }
+
+    /* ── Dashboard layout: main + filter sidebar ── */
+    .dashboard-layout {
+      display: grid;
+      grid-template-columns: 1fr var(--filter-width);
+      flex: 1;
+      min-height: 0;
+    }
+
+    .dashboard-main {
+      padding: 0.75rem 1rem;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Dashboard content grid — fill all vertical space ── */
+    .dashboard-content {
+      display: grid;
+      grid-template-rows: auto 1fr 1fr;
+      gap: 0.75rem;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* ── KPI Cards Row ── */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0.5rem;
+    }
+
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 0.6rem 0.9rem;
+    }
+
+    .kpi-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.15rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .kpi-value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .kpi-value.text-val {
+      font-size: 0.95rem;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    /* ── Chart Cards ── */
+    .chart-row {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 0.5rem;
+      min-height: 0;
+    }
+
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 0.75rem 1rem;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .chart-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+
+    .chart-subtitle {
+      font-size: 0.72rem;
+      color: var(--text-light);
+      margin-top: -0.3rem;
+      margin-bottom: 0.6rem;
+    }
+
+    /* ── Bottom row: treemap + agent detail ── */
+    .bottom-row {
+      display: grid;
+      grid-template-columns: 1.8fr 1fr;
+      gap: 0.5rem;
+      min-height: 0;
+    }
+
+    /* ── Treemap ── */
+    .treemap-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.4rem;
+    }
+
+    .treemap-note {
+      font-size: 0.72rem;
+      color: var(--text-light);
+      font-style: italic;
+    }
+
+    .treemap-container {
+      position: relative;
+      width: 100%;
+      flex: 1;
+      min-height: 120px;
+    }
+
+    .treemap-cell {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 0.35rem 0.5rem;
+      color: white;
+      overflow: hidden;
+      cursor: pointer;
+      border: 1.5px solid var(--surface);
+      transition: opacity 0.15s;
+    }
+    .treemap-cell:hover { opacity: 0.85; }
+
+    .treemap-cell-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.2;
+    }
+
+    .treemap-cell-value {
+      font-size: 0.75rem;
+      font-weight: 400;
+      opacity: 0.9;
+    }
+
+    /* ── Agent Detail Card ── */
+    .agent-detail {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 0.75rem 1rem;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .agent-detail h3 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 1.25rem;
+    }
+
+    .agent-detail-body { min-height: 80px; }
+
+    .agent-detail-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.35rem;
+    }
+
+    .agent-detail-text {
+      font-size: 0.85rem;
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    /* ── Filter Panel (right sidebar) ── */
+    .filter-panel {
+      background: #FAFAFA;
+      border-left: 1px solid var(--border);
+      padding: 0 1rem 1rem;
+      overflow-y: auto;
+      min-height: 0;
+    }
+
+    .filter-header {
+      position: sticky;
+      top: 0;
+      background: #FAFAFA;
+      padding: 0.65rem 0 0.5rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0.6rem;
+    }
+
+    .filter-section {
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.65rem;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .filter-section:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+
+    .filter-group { margin-bottom: 0.5rem; }
+    .filter-group:last-child { margin-bottom: 0; }
+
+    .filter-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.25rem;
+      display: block;
+    }
+
+    .filter-select {
+      width: 100%;
+      padding: 0.3rem 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      font-size: 0.8rem;
+      color: var(--text);
+      background: var(--surface);
+      appearance: auto;
+      cursor: pointer;
+      font-family: var(--font);
+    }
+    .filter-select:focus {
+      outline: 2px solid var(--purple-600);
+      outline-offset: -1px;
+    }
+
+    .filter-date {
+      width: 100%;
+      padding: 0.3rem 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      font-size: 0.8rem;
+      color: var(--text);
+      background: var(--surface);
+      font-family: var(--font);
+    }
+
+    /* ── Auth Gate ── */
+    #auth-gate {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: var(--bg);
+      gap: 1.5rem;
+    }
+    #auth-gate .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    #auth-gate .auth-logo svg { width: 36px; height: 36px; }
+    #auth-gate .auth-subtitle {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+
+    .btn-sign-in {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.75rem 2rem;
+      border: none;
+      border-radius: 4px;
+      background: var(--purple-600);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-family: var(--font);
+    }
+    .btn-sign-in:hover { background: var(--purple-700); }
+    .btn-sign-in svg { width: 20px; height: 20px; }
+
+    .auth-error {
+      color: var(--red);
+      font-size: 0.85rem;
+      max-width: 400px;
+      text-align: center;
+      display: none;
+    }
+
+    .access-denied {
+      color: var(--amber);
+      font-size: 0.9rem;
+      max-width: 480px;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    /* ── Loading / error states ── */
+    .loading-overlay {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem;
+      color: var(--text-secondary);
+    }
+
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--purple-600);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Responsive ── */
+    @media (max-width: 1200px) {
+      html, body { overflow: auto; height: auto; }
+      #app-shell { height: auto; min-height: 100vh; }
+      .dashboard-layout { grid-template-columns: 1fr; }
+      .dashboard-main { overflow: visible; }
+      .filter-panel {
+        border-left: none;
+        border-top: 1px solid var(--border);
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 0.5rem;
+      }
+      .kpi-row { grid-template-columns: repeat(3, 1fr); }
+      .bottom-row { grid-template-columns: 1fr; }
+      .dashboard-content { grid-template-rows: auto auto auto; }
+      .chart-row .chart-card { min-height: 280px; }
+      .treemap-container { min-height: 220px; }
+    }
+
+    @media (max-width: 768px) {
+      .kpi-row { grid-template-columns: repeat(2, 1fr); }
+      .chart-row { grid-template-columns: 1fr; }
+      .dashboard-header { padding: 0 0.75rem; }
+      .dashboard-main { padding: 0.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     CONFIGURATION
+     ═══════════════════════════════════════════════════════════ -->
+<script>
+  const _host = location.hostname;
+  const _API = (_host === "ih.data-analytics.tech" || _host === "localhost" || _host === "127.0.0.1")
+    ? "/api"
+    : "https://ih-api-poc01.azurewebsites.net/api";
+
+  const CONFIG = {
+    DATA_SOURCE:  "file",
+    API_BASE_URL: _API,
+    DATA_FILE:    "data.json",
+    REFRESH_MS:   300000
+  };
+</script>
+<!-- ══════════════════════════════════════════════════════════ -->
+
+<!-- ── Auth gate (shown before sign-in) ── -->
+<div id="auth-gate">
+  <div class="auth-logo">
+    <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="13" stroke="#4B2D8E" stroke-width="2"/>
+      <path d="M14 6v8l5 3" stroke="#6B4FA2" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="14" cy="14" r="2" fill="#4B2D8E"/>
+    </svg>
+    Insight Harbor
+  </div>
+  <div class="auth-subtitle">M365 Copilot Analytics Dashboard</div>
+  <button class="btn-sign-in" id="btn-sign-in" onclick="signIn()">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+    Sign in with Microsoft
+  </button>
+  <div class="auth-error" id="auth-error"></div>
+</div>
+
+<!-- ── App shell (hidden until authenticated) ── -->
+<div id="app-shell">
+
+  <!-- Top purple accent bar -->
+  <div class="accent-bar"></div>
+
+  <header class="dashboard-header">
+    <div class="header-left">
+      <!-- Colorful quadrant icon -->
+      <svg class="header-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="1" width="10" height="10" rx="1.5" fill="#E74C4C"/>
+        <rect x="13" y="1" width="10" height="10" rx="1.5" fill="#8BC34A"/>
+        <rect x="1" y="13" width="10" height="10" rx="1.5" fill="#42A5F5"/>
+        <rect x="13" y="13" width="10" height="10" rx="1.5" fill="#FFCA28"/>
+      </svg>
+      <h1><strong>Agents</strong> Usage Trends</h1>
+    </div>
+    <div class="header-right">
+      <span id="data-as-of" class="header-meta-text"></span>
+      <span id="status-badge" class="header-status-badge"></span>
+      <div class="user-badge">
+        <div class="user-avatar" id="user-avatar"></div>
+        <span id="user-name"></span>
+      </div>
+      <button class="btn-sign-out-sm" onclick="signOut()">Sign out</button>
+      <button class="btn-back" onclick="init()" title="Refresh">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+          <path d="M3 3v5h5"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="dashboard-layout">
+    <main id="main-content" class="dashboard-main">
+      <div class="loading-overlay" id="loading">
+        <div class="spinner"></div>
+        <p>Loading analytics&hellip;</p>
+      </div>
+    </main>
+    <aside class="filter-panel" id="filter-panel"></aside>
+  </div>
+
+</div> <!-- /app-shell -->
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// Disable datalabels by default (enable per-chart)
+// ─────────────────────────────────────────────────────────────────────────────
+Chart.defaults.set('plugins.datalabels', { display: false });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Application Insights — client-side telemetry
+// ─────────────────────────────────────────────────────────────────────────────
+let appInsights = null;
+try {
+  const aiConfig = {
+    connectionString: 'InstrumentationKey=ab758ef9-6220-40f8-899f-ab5787e2fe78;IngestionEndpoint=https://centralus-2.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/',
+    enableAutoRouteTracking: true,
+    disableFetchTracking: false,
+    enableCorsCorrelation: true,
+    enableRequestHeaderTracking: true,
+    enableResponseHeaderTracking: true
+  };
+  if (window.Microsoft && Microsoft.ApplicationInsights) {
+    appInsights = new Microsoft.ApplicationInsights.ApplicationInsights({ config: aiConfig });
+    appInsights.loadAppInsights();
+    appInsights.trackPageView({ name: 'Insight Harbor Dashboard' });
+    console.log('App Insights initialized');
+  }
+} catch(aiErr) {
+  console.warn('App Insights init skipped:', aiErr);
+}
+
+function trackEvent(name, properties, measurements) {
+  if (appInsights) {
+    appInsights.trackEvent({ name: name }, { ...properties }, { ...measurements });
+  }
+}
+
+function trackException(error, properties) {
+  if (appInsights) {
+    appInsights.trackException({ exception: error }, { ...properties });
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MSAL Authentication
+// ─────────────────────────────────────────────────────────────────────────────
+const MSAL_CONFIG = {
+  auth: {
+    clientId: 'e571ba41-17da-4e7b-85fb-bc6d832d4f78',
+    authority: 'https://login.microsoftonline.com/579e8f66-10ec-4646-a923-b9dc013cc0a7',
+    redirectUri: window.location.origin,
+    postLogoutRedirectUri: window.location.origin
+  },
+  cache: {
+    cacheLocation: 'sessionStorage',
+    storeAuthStateInCookie: false
+  }
+};
+
+const AUTHORIZED_GROUP_ID = '97568a14-dd68-4292-b878-700e994b1753';
+
+const msalApp = new msal.PublicClientApplication(MSAL_CONFIG);
+let currentAccount = null;
+
+// ── Local dev bypass ──
+const _isLocalDev = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+                    && CONFIG.DATA_SOURCE === 'file';
+if (_isLocalDev) {
+  currentAccount = { username: 'local-dev@localhost', name: 'Local Developer', tenantId: 'local', idTokenClaims: { groups: [AUTHORIZED_GROUP_ID] } };
+  document.getElementById('auth-gate').style.display = 'none';
+  document.getElementById('app-shell').classList.add('visible');
+  document.getElementById('user-avatar').textContent = 'LD';
+  document.getElementById('user-name').textContent = 'Local Developer';
+  init();
+} else {
+  msalApp.handleRedirectPromise()
+    .then(function (redirectResponse) {
+      if (redirectResponse && redirectResponse.account) {
+        currentAccount = redirectResponse.account;
+        authorizeAndLaunch(currentAccount);
+        return;
+      }
+      var accounts = msalApp.getAllAccounts();
+      if (accounts.length > 0) {
+        currentAccount = accounts[0];
+        authorizeAndLaunch(currentAccount);
+        return;
+      }
+      var btn = document.getElementById('btn-sign-in');
+      btn.disabled = false;
+    })
+    .catch(function (err) {
+      console.error('MSAL redirect error:', err);
+      var btn = document.getElementById('btn-sign-in');
+      btn.disabled = false;
+    });
+}
+
+function signIn() {
+  var btn = document.getElementById('btn-sign-in');
+  btn.disabled = true;
+  btn.textContent = 'Redirecting…';
+  msalApp.loginRedirect({
+    scopes: ['openid', 'profile', 'email'],
+    prompt: 'select_account'
+  });
+}
+
+function signOut() {
+  msalApp.logoutRedirect({ account: currentAccount });
+}
+
+async function authorizeAndLaunch(account) {
+  let groups = account.idTokenClaims?.groups || [];
+
+  if (groups.length === 0) {
+    try {
+      const tokenResponse = await msalApp.acquireTokenSilent({
+        scopes: ['https://graph.microsoft.com/User.Read'],
+        account: account
+      });
+      const memberOf = await fetch('https://graph.microsoft.com/v1.0/me/memberOf', {
+        headers: { Authorization: 'Bearer ' + tokenResponse.accessToken }
+      }).then(r => r.json());
+      groups = (memberOf.value || []).map(g => g.id);
+    } catch (graphErr) {
+      console.warn('Graph group check failed, falling back to token claims only:', graphErr);
+    }
+  }
+
+  if (!groups.includes(AUTHORIZED_GROUP_ID)) {
+    const gate = document.getElementById('auth-gate');
+    gate.innerHTML = `
+      <div class="auth-logo">
+        <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="14" cy="14" r="13" stroke="#4B2D8E" stroke-width="2"/>
+          <path d="M14 6v8l5 3" stroke="#6B4FA2" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="14" cy="14" r="2" fill="#4B2D8E"/>
+        </svg>
+        Insight Harbor
+      </div>
+      <div class="access-denied">
+        <strong>Access Denied</strong><br/>
+        Your account <strong>${account.username}</strong> is not a member of the
+        <em>InsightHarbor-Viewers</em> security group.<br/>
+        Contact your administrator for access.
+      </div>
+      <button class="btn-sign-out-sm" onclick="signOut()" style="margin-top:1rem">Sign out</button>
+    `;
+    return;
+  }
+
+  document.getElementById('auth-gate').style.display = 'none';
+  document.getElementById('app-shell').classList.add('visible');
+
+  if (appInsights) {
+    appInsights.setAuthenticatedUserContext(account.username, account.tenantId, true);
+    trackEvent('UserAuthenticated', { username: account.username });
+  }
+
+  const name = account.name || account.username;
+  const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  document.getElementById('user-avatar').textContent = initials;
+  document.getElementById('user-name').textContent = name;
+
+  init();
+  if (CONFIG.REFRESH_MS > 0) {
+    setInterval(init, CONFIG.REFRESH_MS);
+  }
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  if (el) { el.textContent = msg; el.style.display = 'block'; }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Data loading (preserved from original)
+// ─────────────────────────────────────────────────────────────────────────────
+async function getApiHeaders() {
+  if (CONFIG.DATA_SOURCE !== "api" || !currentAccount) return {};
+  try {
+    const resp = await msalApp.acquireTokenSilent({
+      scopes: ['openid', 'profile'],
+      account: currentAccount
+    });
+    return { 'Authorization': 'Bearer ' + resp.idToken };
+  } catch (err) {
+    console.warn('Silent token acquisition failed, redirecting:', err);
+    msalApp.loginRedirect({ scopes: ['openid', 'profile'] });
+    return {};
+  }
+}
+
+async function fetchData() {
+  if (CONFIG.DATA_SOURCE === "api") {
+    const headers = await getApiHeaders();
+    const opts = { headers };
+    const fetchStart = performance.now();
+    const [summary, trend, dept, workload, licensing, hourly] = await Promise.all([
+      fetch(`${CONFIG.API_BASE_URL}/summary`, opts).then(r => { if (!r.ok) throw new Error(`API ${r.status}`); return r.json(); }),
+      fetch(`${CONFIG.API_BASE_URL}/trend?days=30`, opts).then(r => { if (!r.ok) throw new Error(`API ${r.status}`); return r.json(); }),
+      fetch(`${CONFIG.API_BASE_URL}/department`, opts).then(r => { if (!r.ok) throw new Error(`API ${r.status}`); return r.json(); }),
+      fetch(`${CONFIG.API_BASE_URL}/workload`, opts).then(r => { if (!r.ok) throw new Error(`API ${r.status}`); return r.json(); }),
+      fetch(`${CONFIG.API_BASE_URL}/licensing`, opts).then(r => { if (!r.ok) throw new Error(`API ${r.status}`); return r.json(); }),
+      fetch(`${CONFIG.API_BASE_URL}/hourly`, opts).then(r => { if (!r.ok) throw new Error(`API ${r.status}`); return r.json(); }),
+    ]);
+    const fetchMs = Math.round(performance.now() - fetchStart);
+    trackEvent('DataFetched', { source: 'api', endpoints: '6' }, { durationMs: fetchMs, totalRecords: summary.totalRecords || 0 });
+    return {
+      summary, trend: trend.trend, departments: dept.departments,
+      workloads: workload.workloads, licensing, hourly: hourly.cells || []
+    };
+  } else {
+    const raw = await fetch(CONFIG.DATA_FILE).then(r => r.json());
+    const summary = {
+      totalPrompts:   raw.totalPrompts     || 0,
+      activeUsers:    raw.activeUsers      || 0,
+      topWorkload:    raw.topWorkload      || '—',
+      dataAsOf:       raw.dataAsOf         || null,
+      agentUsageRate: raw.agentUsageRate   || 0,
+      totalRecords:   raw.totalRecords     || raw.totalPrompts || 0
+    };
+    const trend = Object.entries(raw.dailyTrend || {})
+      .map(([date, prompts]) => ({ date, prompts }))
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(-30);
+    const departments = Object.entries(raw.byDepartment || {})
+      .map(([d, u]) => ({ department: d, users: u, prompts: 0 }))
+      .sort((a, b) => b.users - a.users);
+    const workloads = Object.entries(raw.byWorkload || {})
+      .map(([w, r]) => ({ workload: w, records: r }))
+      .sort((a, b) => b.records - a.records);
+    const licensing = { tiers: [], adoptionRate: 0, copilotLicensed: 0, copilotActive: 0 };
+    return { summary, trend, departments, workloads, licensing, hourly: [] };
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sample data (placeholder — real data integration coming later)
+// ─────────────────────────────────────────────────────────────────────────────
+const SAMPLE = {
+  kpis: {
+    mostPopularAgent: "Visual Creator",
+    mostVersatile: "Visual Creator",
+    activeAgents: 169,
+    users: 180,
+    sessionsWeekly: 3.60,
+    activeDaysWeekly: 1.39
+  },
+  trend: {
+    labels: ["Mar 10", "Mar 17", "Mar 24", "Mar 31", "Apr 7", "Apr 14", "Apr 21", "Apr 28", "May 5"],
+    activeUsers: [48, 40, 42, 30, 38, 50, 33, 55, 45],
+    totalSessions: [192, 161, 164, 70, 142, 223, 93, 280, 174]
+  },
+  sessionsPerUser: [
+    { dept: "Finance", value: 7.6 },
+    { dept: "Legal", value: 4.6 },
+    { dept: "Sales", value: 3.6 },
+    { dept: "Operations", value: 3.5 },
+    { dept: "Support", value: 3.0 },
+    { dept: "HR", value: 2.6 },
+    { dept: "Marketing", value: 2.1 },
+    { dept: "IT", value: 2.0 }
+  ],
+  agents: [
+    { name: "Visual Creator", value: 297, desc: "Advanced visual content creation assistant" },
+    { name: "Secure Message Assistant", value: 157, desc: "Secure communication and messaging helper" },
+    { name: "IT Service Agent", value: 138, desc: "IT service desk and troubleshooting agent" },
+    { name: "CRU QA Analyzer Agent", value: 115, desc: "Quality assurance analysis tool" },
+    { name: "CEO FRL Generator", value: 70, desc: "Financial report and letter generator" },
+    { name: "Analyst (Frontline)", value: 41, desc: "Frontline data analysis assistant" },
+    { name: "BAU Complaint Handler", value: 40, desc: "Business as usual complaint management" },
+    { name: "AM PMO Agent", value: 37, desc: "Project management office assistant" },
+    { name: "Researcher", value: 35, desc: "Advanced research assistant using frontier models" },
+    { name: "Researcher Pro", value: 33, desc: "Enhanced research with advanced capabilities" },
+    { name: "Control Assistant", value: 27, desc: "Compliance and control management helper" },
+    { name: "Analyst", value: 23, desc: "General purpose data analysis agent" },
+    { name: "Risk and Compliance", value: 23, desc: "Risk assessment and compliance monitoring" },
+    { name: "Researcher Lite", value: 13, desc: "Lightweight research assistant" },
+    { name: "Data Explorer", value: 10, desc: "Data exploration and visualization tool" }
+  ]
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Header status
+// ─────────────────────────────────────────────────────────────────────────────
+function updateHeaderStatus(dataAsOf) {
+  const badge = document.getElementById('status-badge');
+  const meta  = document.getElementById('data-as-of');
+
+  if (!dataAsOf) {
+    meta.textContent = '';
+    badge.textContent = '';
+    badge.className = 'header-status-badge';
+    return;
+  }
+
+  const loaded = new Date(dataAsOf);
+  const ageH   = (Date.now() - loaded.getTime()) / 3_600_000;
+
+  meta.textContent = `Data: ${loaded.toLocaleDateString()}`;
+
+  if (ageH <= 25) {
+    badge.textContent = 'Fresh';
+    badge.className = 'header-status-badge fresh';
+  } else {
+    badge.textContent = `Stale (${Math.round(ageH)}h)`;
+    badge.className = 'header-status-badge stale';
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Rendering — KPI cards
+// ─────────────────────────────────────────────────────────────────────────────
+function renderKPIs() {
+  const k = SAMPLE.kpis;
+  return `
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label">Most Popular Agent</div>
+        <div class="kpi-value text-val">${k.mostPopularAgent}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Most Versatile...</div>
+        <div class="kpi-value text-val">${k.mostVersatile}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-value">${k.activeAgents}</div>
+        <div class="kpi-label">Active Agents</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-value">${k.users}</div>
+        <div class="kpi-label">Users</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-value">${k.sessionsWeekly.toFixed(2)}</div>
+        <div class="kpi-label">Sessions (Weekly)</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-value">${k.activeDaysWeekly.toFixed(2)}</div>
+        <div class="kpi-label">Active Days (Weekly)</div>
+      </div>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Rendering — Chart cards (HTML shells)
+// ─────────────────────────────────────────────────────────────────────────────
+function renderAgentActionsTrend() {
+  return `
+    <div class="chart-card">
+      <div class="chart-title">Agent Actions Trends</div>
+      <div style="position:relative;flex:1;min-height:0;">
+        <canvas id="agentTrendChart"></canvas>
+      </div>
+    </div>`;
+}
+
+function renderSessionsPerUserChart() {
+  return `
+    <div class="chart-card">
+      <div class="chart-title">Weekly Sessions Per User</div>
+      <div style="position:relative;flex:1;min-height:0;">
+        <canvas id="sessionsPerUserChart"></canvas>
+      </div>
+    </div>`;
+}
+
+function renderSessionsByAgentCard() {
+  return `
+    <div class="chart-card">
+      <div class="treemap-header">
+        <div>
+          <div class="chart-title" style="margin-bottom:0">Total Number of Sessions by Agent</div>
+          <div class="chart-subtitle">Minimum of 3 users</div>
+        </div>
+        <div class="treemap-note">You can filter by Agent in this visual</div>
+      </div>
+      <div id="treemap-container" class="treemap-container"></div>
+    </div>`;
+}
+
+function renderAgentDetailCard() {
+  return `
+    <div class="agent-detail">
+      <h3>Agent Detail</h3>
+      <div class="agent-detail-body" id="agent-detail-body">
+        <div class="agent-detail-label">Description</div>
+        <div class="agent-detail-text" id="agent-detail-text">Advanced research assistant using frontier models</div>
+      </div>
+    </div>`;
+}
+
+function renderDashboard() {
+  return '<div class="dashboard-content">' +
+    renderKPIs() +
+    '<div class="chart-row">' +
+      renderAgentActionsTrend() +
+      renderSessionsPerUserChart() +
+    '</div>' +
+    '<div class="bottom-row">' +
+      renderSessionsByAgentCard() +
+      renderAgentDetailCard() +
+    '</div>' +
+  '</div>';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Rendering — Filter panel
+// ─────────────────────────────────────────────────────────────────────────────
+function renderFilters() {
+  return `
+    <div class="filter-header">Filters</div>
+
+    <div class="filter-section">
+      <div class="filter-group">
+        <label class="filter-label">Date</label>
+        <input type="date" class="filter-date" value="2025-03-01" />
+        <input type="date" class="filter-date" value="2025-06-06" style="margin-top:0.25rem" />
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-group">
+        <label class="filter-label">Organization</label>
+        <select class="filter-select"><option>All</option></select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Agent Review</label>
+        <select class="filter-select"><option>All</option></select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Agent Name</label>
+        <select class="filter-select"><option>All</option></select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Agent Creator</label>
+        <select class="filter-select"><option>All</option></select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Agent Type</label>
+        <select class="filter-select"><option>All</option></select>
+      </div>
+    </div>
+
+    <div class="filter-section">
+      <div class="filter-group">
+        <label class="filter-label">Last Activity Date</label>
+        <select class="filter-select"><option>All</option></select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Agent Versatility</label>
+        <select class="filter-select"><option>All</option></select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">Agent Usage Rank</label>
+        <select class="filter-select"><option>All</option></select>
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">License Status</label>
+        <select class="filter-select"><option>All</option></select>
+      </div>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Chart.js initialization
+// ─────────────────────────────────────────────────────────────────────────────
+let chartInstances = [];
+
+function destroyCharts() {
+  chartInstances.forEach(c => c.destroy());
+  chartInstances = [];
+}
+
+function initCharts() {
+  destroyCharts();
+
+  // ── Dual-axis Agent Actions Trends ──
+  const trendCtx = document.getElementById('agentTrendChart');
+  if (trendCtx) {
+    chartInstances.push(new Chart(trendCtx.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: SAMPLE.trend.labels,
+        datasets: [
+          {
+            label: 'Active Users',
+            data: SAMPLE.trend.activeUsers,
+            borderColor: '#A0A0A0',
+            backgroundColor: 'transparent',
+            pointBackgroundColor: '#A0A0A0',
+            pointBorderColor: '#A0A0A0',
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            borderWidth: 2,
+            tension: 0.35,
+            yAxisID: 'y',
+            datalabels: {
+              display: true,
+              align: 'top',
+              offset: 6,
+              color: '#666',
+              font: { size: 10, weight: '600' }
+            }
+          },
+          {
+            label: 'Total Sessions',
+            data: SAMPLE.trend.totalSessions,
+            borderColor: '#4B2D8E',
+            backgroundColor: 'transparent',
+            pointBackgroundColor: '#4B2D8E',
+            pointBorderColor: '#4B2D8E',
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            borderWidth: 2,
+            tension: 0.35,
+            yAxisID: 'y1',
+            datalabels: {
+              display: true,
+              align: 'top',
+              offset: 6,
+              color: '#4B2D8E',
+              font: { size: 10, weight: '600' }
+            }
+          }
+        ]
+      },
+      plugins: [ChartDataLabels],
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            position: 'top',
+            align: 'start',
+            labels: {
+              color: '#666',
+              usePointStyle: true,
+              pointStyle: 'circle',
+              boxWidth: 8,
+              padding: 16,
+              font: { size: 11 }
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: '#888', font: { size: 10 }, maxTicksLimit: 5 },
+            grid: { color: '#F0F0F0' }
+          },
+          y: {
+            position: 'left',
+            title: { display: true, text: 'Active Users', color: '#888', font: { size: 10 } },
+            ticks: { color: '#888', font: { size: 10 } },
+            grid: { color: '#F0F0F0' },
+            min: 20
+          },
+          y1: {
+            position: 'right',
+            title: { display: true, text: 'Total Sessions', color: '#888', font: { size: 10 } },
+            ticks: { color: '#888', font: { size: 10 } },
+            grid: { drawOnChartArea: false },
+            min: 0
+          }
+        }
+      }
+    }));
+  }
+
+  // ── Weekly Sessions Per User bar chart ──
+  const barCtx = document.getElementById('sessionsPerUserChart');
+  if (barCtx) {
+    const barData = SAMPLE.sessionsPerUser;
+    const barColors = barData.map(function(_, i) {
+      var t = i / Math.max(barData.length - 1, 1);
+      var l = 18 + t * 42;
+      return 'hsl(270, 55%, ' + l + '%)';
+    });
+
+    chartInstances.push(new Chart(barCtx.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: barData.map(function(d) { return d.dept; }),
+        datasets: [{
+          label: 'Weekly Sessions Per User',
+          data: barData.map(function(d) { return d.value; }),
+          backgroundColor: barColors,
+          borderRadius: 0,
+          barPercentage: 0.7,
+          categoryPercentage: 0.8,
+          datalabels: {
+            display: true,
+            anchor: 'end',
+            align: 'top',
+            offset: 2,
+            color: '#666',
+            font: { size: 10, weight: '600' },
+            formatter: function(v) { return v.toFixed(1); }
+          }
+        }]
+      },
+      plugins: [ChartDataLabels],
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: {
+            ticks: { color: '#888', font: { size: 10 }, maxRotation: 45, minRotation: 25 },
+            grid: { display: false }
+          },
+          y: {
+            title: { display: true, text: 'Weekly Sessions Per User', color: '#888', font: { size: 10 } },
+            ticks: { color: '#888', font: { size: 10 } },
+            grid: { color: '#F0F0F0' },
+            beginAtZero: true,
+            suggestedMax: 9
+          }
+        }
+      }
+    }));
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Treemap — binary partition layout
+// ─────────────────────────────────────────────────────────────────────────────
+function computeTreemap(items, x, y, w, h) {
+  if (items.length === 0) return [];
+  if (items.length === 1) {
+    return [{ name: items[0].name, value: items[0].value, desc: items[0].desc, x: x, y: y, w: w, h: h }];
+  }
+
+  var total = 0;
+  for (var i = 0; i < items.length; i++) total += items[i].value;
+  if (total === 0) return [];
+
+  var sum = 0, bestIdx = 0, bestDiff = Infinity;
+  for (var i = 0; i < items.length - 1; i++) {
+    sum += items[i].value;
+    var diff = Math.abs(sum / total - 0.5);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      bestIdx = i;
+    }
+  }
+
+  var left = items.slice(0, bestIdx + 1);
+  var right = items.slice(bestIdx + 1);
+  var leftTotal = 0;
+  for (var i = 0; i < left.length; i++) leftTotal += left[i].value;
+  var ratio = leftTotal / total;
+
+  if (w >= h) {
+    return computeTreemap(left, x, y, w * ratio, h)
+      .concat(computeTreemap(right, x + w * ratio, y, w * (1 - ratio), h));
+  } else {
+    return computeTreemap(left, x, y, w, h * ratio)
+      .concat(computeTreemap(right, x, y + h * ratio, w, h * (1 - ratio)));
+  }
+}
+
+function renderTreemap() {
+  var container = document.getElementById('treemap-container');
+  if (!container) return;
+
+  var sorted = SAMPLE.agents.slice().sort(function(a, b) { return b.value - a.value; });
+  var layout = computeTreemap(sorted, 0, 0, 100, 100);
+
+  var purpleScale = [
+    '#1B0D3F', '#2D1566', '#3B1A6E', '#4B2D8E', '#5C3D99',
+    '#6B4FA2', '#7B63B3', '#8B78C2', '#9B8DD1', '#A99BD8',
+    '#B7AAE0', '#C5B9E7', '#D3C8EE', '#E0D6F4', '#EDE4FA'
+  ];
+
+  container.innerHTML = '';
+  for (var i = 0; i < layout.length; i++) {
+    var item = layout[i];
+    var div = document.createElement('div');
+    div.className = 'treemap-cell';
+    div.style.left = item.x + '%';
+    div.style.top = item.y + '%';
+    div.style.width = item.w + '%';
+    div.style.height = item.h + '%';
+    div.style.backgroundColor = purpleScale[i % purpleScale.length];
+    div.title = item.name + ': ' + item.value + ' sessions';
+
+    var area = item.w * item.h;
+    if (area > 80) {
+      div.innerHTML = '<span class="treemap-cell-label">' + item.name + '</span><span class="treemap-cell-value">' + item.value + '</span>';
+    } else if (area > 30) {
+      var short = item.name.length > 18 ? item.name.slice(0, 16) + '...' : item.name;
+      div.innerHTML = '<span class="treemap-cell-label">' + short + '</span><span class="treemap-cell-value">' + item.value + '</span>';
+    } else if (area > 10) {
+      div.innerHTML = '<span class="treemap-cell-value">' + item.value + '</span>';
+    }
+
+    div.setAttribute('data-agent', item.name);
+    div.onclick = (function(name) {
+      return function() { showAgentDetail(name); };
+    })(item.name);
+
+    container.appendChild(div);
+  }
+}
+
+function showAgentDetail(agentName) {
+  var agent = SAMPLE.agents.find(function(a) { return a.name === agentName; });
+  var textEl = document.getElementById('agent-detail-text');
+  if (agent && textEl) {
+    textEl.textContent = agent.desc;
+  }
+  // Highlight selected treemap cell
+  var cells = document.querySelectorAll('.treemap-cell');
+  cells.forEach(function(cell) {
+    cell.style.outline = cell.getAttribute('data-agent') === agentName
+      ? '2px solid #252423' : 'none';
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Bootstrap
+// ─────────────────────────────────────────────────────────────────────────────
+async function init() {
+  var main = document.getElementById('main-content');
+  var filterPanel = document.getElementById('filter-panel');
+
+  try {
+    // Load data (for status badge); visualizations use SAMPLE data for now
+    var data = await fetchData();
+    updateHeaderStatus(data.summary.dataAsOf);
+
+    // Render dashboard
+    main.innerHTML = renderDashboard();
+    filterPanel.innerHTML = renderFilters();
+
+    // Initialize Chart.js charts
+    initCharts();
+
+    // Render CSS treemap
+    renderTreemap();
+
+    trackEvent('DashboardRendered', { version: 'powerbi-style' });
+
+  } catch (err) {
+    console.error(err);
+    trackException(err, { component: 'init', dataSource: CONFIG.DATA_SOURCE });
+
+    var isApiMode = CONFIG.DATA_SOURCE === 'api';
+    var helpText;
+    if (err.message && err.message.includes('401')) {
+      helpText = 'Authentication failed. <a href="javascript:signOut()" style="color:#4B2D8E">Sign out and try again</a>.';
+    } else if (isApiMode) {
+      helpText = 'Check that the API at <code>' + CONFIG.API_BASE_URL + '</code> is available.';
+    } else {
+      helpText = 'Ensure <code>data.json</code> is present in the dashboard folder.';
+    }
+
+    main.innerHTML =
+      '<div class="loading-overlay">' +
+        '<p style="color:#C42B1C">Failed to load data: ' + err.message + '</p>' +
+        '<p style="margin-top:.5rem;font-size:.85rem;color:var(--text-secondary)">' + helpText + '</p>' +
+      '</div>';
+
+    filterPanel.innerHTML = renderFilters();
+
+    var badge = document.getElementById('status-badge');
+    if (badge) {
+      badge.textContent = 'Error';
+      badge.className = 'header-status-badge no-data';
+    }
+  }
+}
+
+// init() and refresh are called by authorizeAndLaunch() after successful auth
+</script>
+</body>
+</html>
