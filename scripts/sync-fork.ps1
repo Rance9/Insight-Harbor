@@ -1,5 +1,17 @@
-# sync-repo.ps1 — Sync fork with Rance9/Insight-Harbor, optionally commit + create PR
-# Usage: Right-click → "Run in Terminal"  or  Ctrl+Shift+` then: .\scripts\sync-repo.ps1
+# sync-fork.ps1 — Sync fork with Rance9/Insight-Harbor, optionally commit + create PR
+# Usage: Right-click → "Run in Terminal"  or  Ctrl+Shift+` then: .\scripts\sync-fork.ps1
+
+# Navigate to the repo root (parent of scripts/ folder)
+Set-Location (Split-Path $PSScriptRoot -Parent)
+if (-not (Test-Path ".git")) {
+    Set-Location $PSScriptRoot
+    if (-not (Test-Path "..\.git")) {
+        Write-Host "ERROR: Could not find the git repository. Run this script from inside the Insight Harbor folder." -ForegroundColor Red
+        exit 1
+    }
+    Set-Location ..
+}
+Write-Host "Working directory: $(Get-Location)" -ForegroundColor Gray
 
 # ─────────────────────────────────────────────────────────────
 # PHASE 1: Ensure GitHub CLI is installed and authenticated

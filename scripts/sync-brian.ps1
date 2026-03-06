@@ -1,6 +1,18 @@
 # sync-brian.ps1 — Pull latest from Rance9/Insight-Harbor, optionally commit + push
 # Usage: Right-click → "Run in Terminal"  or  Ctrl+Shift+` then: .\scripts\sync-brian.ps1
 
+# Navigate to the repo root (parent of scripts/ folder)
+Set-Location (Split-Path $PSScriptRoot -Parent)
+if (-not (Test-Path ".git")) {
+    Set-Location $PSScriptRoot
+    if (-not (Test-Path "..\.git")) {
+        Write-Host "ERROR: Could not find the git repository. Run this script from inside the Insight Harbor folder." -ForegroundColor Red
+        exit 1
+    }
+    Set-Location ..
+}
+Write-Host "Working directory: $(Get-Location)" -ForegroundColor Gray
+
 # ─────────────────────────────────────────────────────────────
 # PHASE 1: Pull latest from origin (Rance9 main repo)
 # ─────────────────────────────────────────────────────────────
