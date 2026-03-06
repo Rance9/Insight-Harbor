@@ -2,14 +2,19 @@
 # Usage: Right-click → "Run in Terminal"  or  Ctrl+Shift+` then: .\scripts\sync-fork.ps1
 
 # Navigate to the repo root (parent of scripts/ folder)
-Set-Location (Split-Path $PSScriptRoot -Parent)
-if (-not (Test-Path ".git")) {
-    Set-Location $PSScriptRoot
-    if (-not (Test-Path "..\.git")) {
-        Write-Host "ERROR: Could not find the git repository. Run this script from inside the Insight Harbor folder." -ForegroundColor Red
+if ($PSScriptRoot) {
+    Set-Location (Split-Path $PSScriptRoot -Parent)
+}
+if (-not (Test-Path (Join-Path (Get-Location) ".git"))) {
+    # Try parent of current directory as fallback
+    $parent = Split-Path (Get-Location) -Parent
+    if ($parent -and (Test-Path (Join-Path $parent ".git"))) {
+        Set-Location $parent
+    } else {
+        Write-Host "ERROR: Could not find the git repository. Make sure VS Code has the Insight Harbor folder open as the workspace." -ForegroundColor Red
+        Write-Host "Current directory: $(Get-Location)" -ForegroundColor Red
         exit 1
     }
-    Set-Location ..
 }
 Write-Host "Working directory: $(Get-Location)" -ForegroundColor Gray
 
@@ -77,6 +82,15 @@ Write-Host "[Setup] GitHub CLI ready.`n" -ForegroundColor Green
 # PHASE 2: Sync with upstream (Rance9 main repo)
 # ─────────────────────────────────────────────────────────────
 
+# Stash any uncommitted changes so rebase can proceed cleanly
+$hasChanges = git status --porcelain
+$stashed = $false
+if ($hasChanges) {
+    Write-Host "[Sync] Stashing your uncommitted changes temporarily..." -ForegroundColor Yellow
+    git stash push -m "sync-fork-auto-stash"
+    $stashed = $true
+}
+
 Write-Host "[Sync] Fetching upstream (Rance9/Insight-Harbor)..." -ForegroundColor Green
 git fetch upstream
 
@@ -85,8 +99,21 @@ git rebase upstream/main
 if ($LASTEXITCODE -ne 0) {
     Write-Host "`nRebase conflict detected. Resolve conflicts, then run:" -ForegroundColor Red
     Write-Host "  git rebase --continue" -ForegroundColor Red
+    if ($stashed) {
+        Write-Host "  git stash pop    (to restore your changes)" -ForegroundColor Red
+    }
     Write-Host "Then re-run this script." -ForegroundColor Red
     exit 1
+}
+
+# Restore stashed changes
+if ($stashed) {
+    Write-Host "[Sync] Restoring your uncommitted changes..." -ForegroundColor Yellow
+    git stash pop
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Stash pop had conflicts. Resolve them manually, then continue." -ForegroundColor Red
+        exit 1
+    }
 }
 
 Write-Host "[Sync] Local repo is up to date with upstream.`n" -ForegroundColor Green

@@ -2,14 +2,19 @@
 # Usage: Right-click → "Run in Terminal"  or  Ctrl+Shift+` then: .\scripts\sync-brian.ps1
 
 # Navigate to the repo root (parent of scripts/ folder)
-Set-Location (Split-Path $PSScriptRoot -Parent)
-if (-not (Test-Path ".git")) {
-    Set-Location $PSScriptRoot
-    if (-not (Test-Path "..\.git")) {
-        Write-Host "ERROR: Could not find the git repository. Run this script from inside the Insight Harbor folder." -ForegroundColor Red
+if ($PSScriptRoot) {
+    Set-Location (Split-Path $PSScriptRoot -Parent)
+}
+if (-not (Test-Path (Join-Path (Get-Location) ".git"))) {
+    # Try parent of current directory as fallback
+    $parent = Split-Path (Get-Location) -Parent
+    if ($parent -and (Test-Path (Join-Path $parent ".git"))) {
+        Set-Location $parent
+    } else {
+        Write-Host "ERROR: Could not find the git repository. Make sure VS Code has the Insight Harbor folder open as the workspace." -ForegroundColor Red
+        Write-Host "Current directory: $(Get-Location)" -ForegroundColor Red
         exit 1
     }
-    Set-Location ..
 }
 Write-Host "Working directory: $(Get-Location)" -ForegroundColor Gray
 
