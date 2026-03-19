@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>Insight Harbor — Copilot Analytics</title>
 
   <!-- Block all crawlers, search engines, and AI bots -->
@@ -588,6 +591,487 @@
       font-style: italic;
     }
 
+    /* ── Dataset KPI Row ── */
+    .ds-kpi-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      flex-shrink: 0;
+    }
+    .ds-kpi-card {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 0.6rem 0.85rem;
+      display: flex;
+      flex-direction: column;
+    }
+    .ds-kpi-value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.2;
+    }
+    .ds-kpi-label {
+      font-size: 0.68rem;
+      color: var(--text-secondary);
+      margin-top: 0.1rem;
+    }
+
+    /* ── Real chart cards ── */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 0.75rem;
+      flex: 1;
+      min-height: 0;
+    }
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      min-height: 200px;
+      padding: 0.75rem 1rem;
+      position: relative;
+    }
+    .chart-card .chart-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+      flex-shrink: 0;
+    }
+    .chart-card .chart-subtitle {
+      font-size: 0.7rem;
+      color: var(--text-light);
+      margin-top: -0.35rem;
+      margin-bottom: 0.4rem;
+    }
+    .chart-card .chart-wrap {
+      flex: 1;
+      min-height: 0;
+      position: relative;
+    }
+    .chart-card canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+    .chart-legend-inline {
+      display: flex;
+      gap: 0.75rem;
+      font-size: 0.68rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.3rem;
+    }
+    .chart-legend-inline span {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .chart-legend-inline .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* ── Treemap (Agents view) ── */
+    .agents-bottom-row {
+      display: grid;
+      grid-template-columns: 1.8fr 1fr;
+      gap: 0.75rem;
+      flex: 1;
+      min-height: 0;
+    }
+    .treemap-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 0.75rem 1rem;
+      display: flex;
+      flex-direction: column;
+      min-height: 200px;
+    }
+    .treemap-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.4rem;
+    }
+    .treemap-note {
+      font-size: 0.72rem;
+      color: var(--text-light);
+      font-style: italic;
+    }
+    .treemap-container {
+      position: relative;
+      width: 100%;
+      flex: 1;
+      min-height: 120px;
+    }
+    .treemap-cell {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 0.35rem 0.5rem;
+      color: white;
+      overflow: hidden;
+      cursor: pointer;
+      border: 1.5px solid var(--surface);
+      transition: opacity 0.15s;
+    }
+    .treemap-cell:hover { opacity: 0.85; }
+    .treemap-cell-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.2;
+    }
+    .treemap-cell-value {
+      font-size: 0.75rem;
+      font-weight: 400;
+      opacity: 0.9;
+    }
+    .agent-detail-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 0.75rem 1rem;
+      display: flex;
+      flex-direction: column;
+      min-height: 200px;
+    }
+    .agent-detail-card h3 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 1.25rem;
+    }
+    .agent-detail-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.35rem;
+    }
+    .agent-detail-text {
+      font-size: 0.85rem;
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    /* ── Heatmap Tables (Leaderboard views) ── */
+    .lb-tables-row {
+      display: grid;
+      grid-template-columns: 1fr 1.4fr;
+      gap: 0.75rem;
+      flex: 1;
+      min-height: 0;
+    }
+    .lb-tables-row.equal { grid-template-columns: 1fr 1fr; }
+    .lb-table-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.9rem 1.05rem;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .lb-table-card .chart-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.15rem;
+    }
+    .lb-table-card .lb-subtitle {
+      font-size: 0.7rem;
+      color: var(--text-light);
+      margin-bottom: 0.5rem;
+    }
+    .hm-table-wrap {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
+      border-radius: 6px;
+    }
+    .hm-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      border: 1px solid #ccc;
+    }
+    .hm-table th {
+      text-align: left;
+      font-weight: 700;
+      color: #222;
+      font-size: 0.78rem;
+      padding: 0.55rem 0.65rem;
+      border: 1px solid #ccc;
+      position: sticky;
+      top: 0;
+      background: var(--surface);
+      white-space: nowrap;
+    }
+    .hm-table th.num { text-align: right; }
+    .hm-table td {
+      padding: 0.5rem 0.65rem;
+      border: 1px solid #ddd;
+      white-space: nowrap;
+    }
+    .hm-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .hm-table td.hm {
+      text-align: center;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      padding: 0.4rem 0.75rem;
+      min-width: 60px;
+    }
+    .hm-table tr.total-row td {
+      font-weight: 700;
+      border-bottom: 2px solid #999;
+    }
+    .hm-table .expand-icon {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      text-align: center;
+      line-height: 14px;
+      font-size: 0.65rem;
+      border: 1px solid #bbb;
+      color: #888;
+      margin-right: 0.35rem;
+      cursor: pointer;
+      vertical-align: middle;
+    }
+    .lb-legend {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin-top: 0.75rem;
+    }
+    .lb-legend-inner {
+      display: flex;
+      gap: 2.5rem;
+    }
+    .lb-legend-col {
+      font-size: 0.72rem;
+      color: #333;
+      line-height: 1.7;
+    }
+    .lb-legend-col .leg-label {
+      font-weight: 600;
+      margin-bottom: 0.1rem;
+    }
+    .lb-legend-col .leg-item {
+      display: flex;
+      align-items: baseline;
+      gap: 0.4rem;
+    }
+    .lb-legend-col .leg-icon {
+      flex-shrink: 0;
+      width: 14px;
+      text-align: center;
+    }
+    .lb-legend-col .leg-eq {
+      color: #888;
+      margin: 0 0.15rem;
+    }
+    .lb-kpi {
+      flex: 1;
+      min-width: 110px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 8px;
+      text-align: center;
+      overflow: hidden;
+    }
+    .lb-kpi .lb-kpi-bar {
+      height: 6px;
+      background: linear-gradient(90deg, #6C3FC5, #9D6AE8);
+    }
+    .lb-kpi .lb-kpi-body {
+      padding: 0.8rem 0.55rem;
+    }
+    .lb-kpi .lb-kpi-label {
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+      margin-bottom: 0.25rem;
+    }
+    .lb-kpi .lb-kpi-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .lb-legend h4 {
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+    .lb-legend-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.2rem 1.5rem;
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+    }
+
+    /* ── Agents Leaderboard exact-fit overrides ── */
+    .agents-lb-main {
+      overflow-y: auto;
+    }
+    .agents-lb-main .agents-lb-kpi-row {
+      flex: 0 0 auto;
+    }
+    .agents-lb-main .agents-lb-row {
+      grid-template-columns: 31% 69%;
+      min-height: 0;
+      align-items: start;
+      flex: 0 0 auto;
+    }
+    .agents-lb-main .agents-lb-left-wrap,
+    .agents-lb-main .agents-lb-right-wrap {
+      flex: 0 0 auto;
+      min-height: 0;
+      overflow: auto;
+      max-height: 430px;
+    }
+    .agents-lb-main .agents-lb-left-table {
+      height: auto;
+    }
+    .agents-lb-main .agents-lb-right-table {
+      min-width: 1100px;
+      height: auto;
+    }
+    .agents-lb-main .agents-lb-legend {
+      background: #e6e6e6;
+      border: 1px solid #d0d0d0;
+      margin-top: 0.35rem;
+      padding: 0.5rem 0.7rem;
+      flex: 0 0 auto;
+    }
+
+    /* ── M365 Leaderboard exact-fit overrides ── */
+    .m365-lb-main {
+      overflow-y: auto;
+    }
+    .m365-lb-main .m365-lb-title-row {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      margin-bottom: 0.55rem;
+      padding-bottom: 0.45rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .m365-lb-main .m365-lb-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 9px;
+      background: linear-gradient(145deg, #4cc0ff 0%, #3b82f6 35%, #7c3aed 75%, #f97316 100%);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.45);
+      flex-shrink: 0;
+    }
+    .m365-lb-main .m365-lb-title {
+      font-size: 2rem;
+      line-height: 1;
+      color: #222;
+    }
+    .m365-lb-main .m365-lb-title strong {
+      font-weight: 700;
+    }
+    .m365-lb-main .m365-lb-title span {
+      font-weight: 400;
+      color: #5f5f5f;
+    }
+    .m365-lb-main .m365-lb-kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.7rem;
+      margin-bottom: 0.75rem;
+    }
+    .m365-lb-main .m365-lb-kpi {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .m365-lb-main .m365-lb-kpi .m365-lb-kpi-bar {
+      height: 6px;
+      background: linear-gradient(90deg, #1976d2, #42a5f5);
+    }
+    .m365-lb-main .m365-lb-kpi .m365-lb-kpi-body {
+      padding: 0.6rem 0.75rem 0.5rem;
+    }
+    .m365-lb-main .m365-lb-kpi .m365-lb-kpi-value {
+      font-size: 2.35rem;
+      font-weight: 700;
+      color: #1f2937;
+      line-height: 1.05;
+      margin-bottom: 0.2rem;
+    }
+    .m365-lb-main .m365-lb-kpi .m365-lb-kpi-label {
+      font-size: 0.58rem;
+      color: #4b5563;
+      line-height: 1.25;
+      font-weight: 600;
+    }
+    .m365-lb-main .m365-lb-row {
+      grid-template-columns: 1fr 1fr;
+      align-items: stretch;
+      min-height: clamp(460px, 58vh, 720px);
+      flex: 0 0 auto;
+    }
+    .m365-lb-main .m365-lb-row .lb-table-card {
+      min-height: clamp(460px, 58vh, 720px);
+      padding: 0.5rem 0.65rem;
+    }
+    .m365-lb-main .m365-lb-left-wrap,
+    .m365-lb-main .m365-lb-right-wrap {
+      flex: 0 0 auto;
+      max-height: 365px;
+      overflow: auto;
+      border-radius: 6px;
+    }
+    .m365-lb-main .m365-lb-left-table,
+    .m365-lb-main .m365-lb-right-table {
+      width: 100%;
+      height: auto;
+      min-width: 0;
+      font-size: 0.78rem;
+    }
+    .m365-lb-main .m365-sort {
+      display: block;
+      margin-top: 0.12rem;
+      font-size: 0.68rem;
+      line-height: 1;
+      color: #111;
+    }
+    .m365-lb-main .m365-total-row td {
+      font-weight: 700;
+      background: var(--surface);
+      color: #222;
+    }
+    .m365-lb-main .m365-date-wrap {
+      position: relative;
+    }
+    .m365-lb-main .m365-date-input {
+      padding-right: 1.45rem;
+    }
+    .m365-lb-main .m365-date-icon {
+      position: absolute;
+      right: 0.4rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #7a7a7a;
+      font-size: 0.72rem;
+      pointer-events: none;
+    }
+
     /* ── Filter Panel (right sidebar) ── */
     .filter-panel {
       background: #FAFAFA;
@@ -631,7 +1115,7 @@
       width: 100%;
       padding: 0.3rem 0.5rem;
       border: 1px solid var(--border);
-      border-radius: 2px;
+      border-radius: 6px;
       font-size: 0.8rem;
       color: var(--text);
       background: var(--surface);
@@ -647,7 +1131,7 @@
       width: 100%;
       padding: 0.3rem 0.5rem;
       border: 1px solid var(--border);
-      border-radius: 2px;
+      border-radius: 6px;
       font-size: 0.8rem;
       color: var(--text);
       background: var(--surface);
@@ -844,7 +1328,7 @@
 // ─────────────────────────────────────────────────────────────
 // Disable datalabels by default (enable per-chart)
 // ─────────────────────────────────────────────────────────────
-Chart.defaults.set('plugins.datalabels', { display: false });
+try { Chart.defaults.set('plugins.datalabels', { display: false }); } catch(e) { console.warn('datalabels default skipped:', e); }
 
 // ─────────────────────────────────────────────────────────────
 // Application Insights — client-side telemetry
@@ -892,7 +1376,8 @@ var MSAL_CONFIG = {
 };
 
 var AUTHORIZED_GROUP_ID = '97568a14-dd68-4292-b878-700e994b1753';
-var msalApp = new msal.PublicClientApplication(MSAL_CONFIG);
+var msalApp = null;
+try { msalApp = new msal.PublicClientApplication(MSAL_CONFIG); } catch(e) { console.warn('MSAL init skipped:', e); }
 var currentAccount = null;
 
 // ── Local dev bypass ──
@@ -1084,88 +1569,66 @@ function updateHeaderStatus(dataAsOf) {
 // DATA DEFINITIONS — Segments & Datasets
 // ─────────────────────────────────────────────────────────────
 var SEGMENTS = {
-  'm365':       { label: 'M365 Copilot',          color: '#1976D2' },
-  'unlicensed': { label: 'Copilot (Unlicensed)',   color: '#C2185B' },
-  'combined':   { label: 'Combined',               color: '#4B2D8E' }
+  'overall': { label: 'Copilot Overall', color: '#4B2D8E' }
 };
 
 var ICONS = {
-  'usage-trends':          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>',
-  'leaderboard':           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="14" width="4" height="7"/><rect x="10" y="8" width="4" height="13"/><rect x="17" y="11" width="4" height="10"/></svg>',
-  'health-check':          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
-  'use-cases':             '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>',
-  'habit-formation':       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>',
-  'license-prioritization': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>'
+  'agents': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 21v-2a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  'copilot-unlicensed': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="3" x2="21" y2="21"/></svg>',
+  'm365-copilot': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 20h8"/></svg>',
+  'copilot-overall': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>'
 };
 
 var PLACEHOLDER_CHART_SVG = '<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="4" width="40" height="40" rx="4" stroke="currentColor" stroke-width="1.5"/><polyline points="10 34 18 22 26 28 38 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="38" cy="14" r="2" fill="currentColor"/></svg>';
 
 var DATASETS = {
-  'usage-trends': {
-    title: 'Usage Trends',
-    description: 'Daily and weekly Copilot activity trends, session volumes, and active user curves',
-    views: ['Overview', 'Weekly Breakdown', 'Department Comparison'],
-    segments: ['m365', 'unlicensed', 'combined'],
-    metrics: { m365: '+12% \u2191', unlicensed: '+8% \u2191', combined: '+10% \u2191' },
+  'agents': {
+    title: 'Agents',
+    description: 'Agent adoption, usage performance, and agent-specific engagement analytics',
+    views: ['Usage Trends', 'Leaderboard', 'Health Check', 'Use Cases'],
+    segments: ['overall'],
+    metrics: { overall: '169 active agents' },
     chartTitles: {
-      0: ['Average Sessions Per User Over Time', 'Active Users by Week', 'Daily Prompt Volume', 'Workload Distribution'],
-      1: ['Week-over-Week Growth', 'Sessions by Day of Week', 'Peak Usage Hours', 'Weekly Retention'],
-      2: ['Sessions Per User by Department', 'Department Growth Rates', 'Cross-Department Adoption', 'Department Engagement Depth']
+      0: ['Agent Adoption Trend', 'Top Agents by Sessions', 'Sessions per Agent User', 'Agent Builder Activity'],
+      1: ['Org Leaderboard', 'Agents Leaderboard', 'Agent Features', 'Agent Detail'],
+      2: ['Agent Health Status', 'Activity Timeline', 'Review Categories', 'Agent Inventory'],
+      3: ['Sessions by Agent', 'Use Case Analysis', 'Business Value', 'Leadership Q&A']
     }
   },
-  'leaderboard': {
-    title: 'Leaderboard',
-    description: 'Top users, departments, and agents ranked by adoption, sessions, and engagement depth',
-    views: ['Top Users', 'Top Departments', 'Top Agents', 'Rising Stars'],
-    segments: ['m365', 'unlicensed', 'combined'],
-    metrics: { m365: 'Top: Finance', unlicensed: 'Top: Marketing', combined: 'Top: Finance' },
+  'copilot-unlicensed': {
+    title: 'Copilot Chat (Unlicensed)',
+    description: 'Unlicensed user behavior, engagement opportunities, and readiness indicators',
+    views: ['Usage Trends', 'Leaderboard', 'Habitual Formation', 'License Prioritization'],
+    segments: ['overall'],
+    metrics: { overall: '2,585 active users' },
     chartTitles: {
-      0: ['Most Active Users', 'User Activity Timeline', 'Session Distribution', 'Power Users vs Regular'],
-      1: ['Department Rankings', 'Department Adoption Rate', 'Department Session Volume', 'Department Activity Heatmap'],
-      2: ['Most Used Agents', 'Agent Session Counts', 'Agent User Distribution', 'Agent Versatility Score'],
-      3: ['Fastest Growing Users', 'New Adopters This Month', 'Acceleration Metrics', 'Emerging Use Patterns']
+      0: ['Unlicensed Chat Usage Trends', 'Weekly Sessions Per User', 'Avg Weekly Sessions by Rank', 'Usage by Application'],
+      1: ['Org Leaderboard', 'Chat Usage by Surface'],
+      2: ['User Activity', 'Habitual Frequency', '% by Habitual Usage', 'Active Days'],
+      3: ['Usage Leaderboard', 'License Priority Matrix']
     }
   },
-  'health-check': {
-    title: 'Health Check',
-    description: 'Pipeline status, data freshness, and ingestion monitoring',
-    views: ['Overview'],
-    segments: ['m365', 'unlicensed', 'combined'],
-    metrics: { m365: '\u25CF Healthy', unlicensed: '\u25CF Healthy', combined: '\u25CF Healthy' },
+  'm365-copilot': {
+    title: 'M365 Copilot',
+    description: 'Licensed M365 Copilot adoption and usage performance across the organization',
+    views: ['Usage Trends', 'Leaderboard', 'Habit Formation'],
+    segments: ['overall'],
+    metrics: { overall: '1,616 active users' },
     chartTitles: {
-      0: ['Pipeline Status', 'Data Freshness Timeline', 'Ingestion Volume Trend', 'Error Rate Monitor']
+      0: ['M365 Copilot Usage Trends', 'Weekly Sessions Per User', 'Weekly Sessions by User Rank', 'Copilot Adoption Thresholds'],
+      1: ['Org Leaderboard', 'Usage by User Rank'],
+      2: ['User Activity', 'Habitual Frequency', '% by Habitual Usage', 'Active Days']
     }
   },
-  'use-cases': {
-    title: 'Use Cases',
-    description: 'What Copilot is being used for \u2014 by workload, task type, and scenario',
-    views: ['Overview'],
-    segments: ['m365', 'unlicensed', 'combined'],
-    metrics: { m365: 'Teams: 42%', unlicensed: 'Chat: 67%', combined: 'Teams: 38%' },
+  'copilot-overall': {
+    title: 'Copilot Overall',
+    description: 'Unified view across agents, unlicensed users, and M365 Copilot engagement',
+    views: ['Combined Trends', 'Combined Leaderboard'],
+    segments: ['overall'],
+    metrics: { overall: '4,201 total active users' },
     chartTitles: {
-      0: ['Usage by Workload', 'Top Task Categories', 'Scenario Breakdown', 'Feature Adoption Funnel']
-    }
-  },
-  'habit-formation': {
-    title: 'Habit Formation',
-    description: 'Retention cohorts, frequency streaks, and weekly active day patterns',
-    views: ['Retention Cohorts', 'Frequency Patterns', 'Sticky Users'],
-    segments: ['m365', 'unlicensed', 'combined'],
-    metrics: { m365: '38% sticky', unlicensed: '24% sticky', combined: '31% sticky' },
-    chartTitles: {
-      0: ['Weekly Retention Cohort Grid', 'Retention Rate Over Time', 'Cohort Size Trend', 'Drop-off Analysis'],
-      1: ['Sessions Per User Distribution', 'Active Days Per Week', 'Usage Frequency Trend', 'Time-of-Day Patterns'],
-      2: ['Sticky User Percentage', 'Sticky vs Casual Users', 'Stickiness Trend', 'Department Stickiness']
-    }
-  },
-  'license-prioritization': {
-    title: 'License Prioritization',
-    description: 'Identify high-engagement unlicensed users for license allocation',
-    views: ['Overview'],
-    segments: ['unlicensed', 'combined'],
-    metrics: { unlicensed: '162 candidates', combined: '162 candidates' },
-    chartTitles: {
-      0: ['License Utilization Rate', 'Top Candidates for Licensing', 'Engagement Score Distribution', 'Recommended Reallocations']
+      0: ['Avg Sessions Over Time', 'Active Users by Dept', 'Usage Frequency & Intensity'],
+      1: ['Licensed Usage', 'Unlicensed Usage']
     }
   }
 };
@@ -1174,7 +1637,7 @@ var DATASETS = {
 // APPLICATION STATE
 // ─────────────────────────────────────────────────────────────
 var STATE = {
-  segment: 'combined',
+  segment: 'overall',
   view: 'hub',
   subView: 0
 };
@@ -1204,10 +1667,65 @@ function setSegment(seg) {
 // RENDER ORCHESTRATOR
 // ─────────────────────────────────────────────────────────────
 function renderApp() {
+  destroyCharts();
   updateHeaderLeft();
   var content = document.getElementById('app-content');
   if (STATE.view === 'hub') {
     content.innerHTML = renderHub();
+  } else if (STATE.view === 'agents') {
+    // Agents sub-views
+    if (STATE.subView === 0) {
+      content.innerHTML = renderAgentsUsageTrends();
+      initAgentsUsageTrendsCharts();
+    } else if (STATE.subView === 1) {
+      content.innerHTML = renderAgentsLeaderboard();
+    } else if (STATE.subView === 2) {
+      content.innerHTML = renderAgentsHealthCheck();
+    } else if (STATE.subView === 3) {
+      content.innerHTML = renderAgentsUseCases();
+      initAgentsUseCasesTreemap();
+    } else {
+      content.innerHTML = renderDatasetView();
+    }
+  } else if (STATE.view === 'copilot-unlicensed') {
+    // Copilot Chat (Unlicensed) sub-views
+    if (STATE.subView === 0) {
+      content.innerHTML = renderCopilotChatUsageTrends();
+      initCopilotChatUsageTrendsCharts();
+    } else if (STATE.subView === 1) {
+      content.innerHTML = renderCopilotChatLeaderboard();
+    } else if (STATE.subView === 2) {
+      content.innerHTML = renderCopilotChatHabitualFormation();
+      initCopilotChatHabitualCharts();
+    } else if (STATE.subView === 3) {
+      content.innerHTML = renderCopilotChatLicensePrioritization();
+      initCopilotChatLicensePriorityCharts();
+    } else {
+      content.innerHTML = renderDatasetView();
+    }
+  } else if (STATE.view === 'm365-copilot') {
+    // M365 Copilot sub-views
+    if (STATE.subView === 0) {
+      content.innerHTML = renderM365UsageTrends();
+      initM365UsageTrendsCharts();
+    } else if (STATE.subView === 1) {
+      content.innerHTML = renderM365Leaderboard();
+    } else if (STATE.subView === 2) {
+      content.innerHTML = renderM365HabitFormation();
+      initM365HabitFormationCharts();
+    } else {
+      content.innerHTML = renderDatasetView();
+    }
+  } else if (STATE.view === 'copilot-overall') {
+    // Copilot Overall sub-views
+    if (STATE.subView === 0) {
+      content.innerHTML = renderCopilotOverallCombinedTrends();
+      initCopilotOverallCombinedTrendsCharts();
+    } else if (STATE.subView === 1) {
+      content.innerHTML = renderCopilotOverallCombinedLeaderboard();
+    } else {
+      content.innerHTML = renderDatasetView();
+    }
   } else {
     content.innerHTML = renderDatasetView();
   }
@@ -1230,7 +1748,6 @@ function updateHeaderLeft() {
       '</svg>' +
       '<h1><strong>Insight</strong> Harbor</h1>';
   } else {
-    var seg = SEGMENTS[STATE.segment];
     var ds = DATASETS[STATE.view];
     el.innerHTML =
       '<button class="btn-back" onclick="navigate(\'hub\')" title="Back to Hub">' +
@@ -1240,8 +1757,6 @@ function updateHeaderLeft() {
       '</button>' +
       '<div class="breadcrumb">' +
         '<span class="breadcrumb-item" onclick="navigate(\'hub\')">Hub</span>' +
-        '<span class="breadcrumb-sep">\u203A</span>' +
-        '<span class="breadcrumb-item" onclick="navigate(\'hub\')" style="color:' + seg.color + '">' + seg.label + '</span>' +
         '<span class="breadcrumb-sep">\u203A</span>' +
         '<span class="breadcrumb-item active">' + ds.title + '</span>' +
       '</div>';
@@ -1254,145 +1769,90 @@ function updateHeaderLeft() {
 function renderHub() {
   return '<div class="hub-scroll">' +
     renderHero() +
-    renderSegmentSelector() +
     '<div class="hub-content">' + renderNavTiles() + '</div>' +
   '</div>';
 }
 
-function sparklineSVG(data, color, w, h) {
-  if (!data || data.length < 2) return '';
-  var mx = Math.max.apply(null, data);
-  var mn = Math.min.apply(null, data);
-  var r = mx - mn || 1;
-  var pts = [];
-  for (var i = 0; i < data.length; i++) {
-    var x = (i / (data.length - 1)) * w;
-    var y = h - ((data[i] - mn) / r) * (h - 4) - 2;
-    pts.push(x.toFixed(1) + ',' + y.toFixed(1));
-  }
-  var last = pts[pts.length - 1].split(',');
-  // Build area fill path
-  var areaD = 'M' + pts[0];
-  for (var j = 1; j < pts.length; j++) areaD += ' L' + pts[j];
-  areaD += ' L' + w + ',' + h + ' L0,' + h + ' Z';
-  return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '">' +
-    '<path d="' + areaD + '" fill="' + color + '" opacity="0.15"/>' +
-    '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + color + '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
-    '<circle cx="' + last[0] + '" cy="' + last[1] + '" r="2.5" fill="' + color + '"/>' +
-  '</svg>';
-}
-
 function renderHero() {
-  var kpis = getHeroKPIs(STATE.segment);
-  var segColor = SEGMENTS[STATE.segment].color;
-  var sparkColor = 'rgba(255,255,255,0.85)';
-  var html = '<div class="hub-hero"><div class="hub-hero-content">';
-  html += '<h2><strong>Copilot</strong> Analytics</h2>';
-  html += '<div class="hub-hero-subtitle">M365 adoption insights across your organization</div>';
-  html += '<div class="hub-kpi-row">';
+  var kpis = getHeroKPIs();
+  var cards = '';
   for (var i = 0; i < kpis.length; i++) {
-    html += '<div class="hub-kpi-card">';
-    html += '<div class="hub-kpi-value">' + kpis[i].value + '</div>';
-    html += '<div class="hub-kpi-label">' + kpis[i].label + '</div>';
-    if (kpis[i].spark) {
-      html += '<div class="hub-kpi-sparkline">' + sparklineSVG(kpis[i].spark, sparkColor, 160, 36) + '</div>';
-    }
-    html += '</div>';
+    var k = kpis[i];
+    var sparkHtml = k.spark ? '<div class="hub-kpi-sparkline">' + sparklineSVG(k.spark, 'rgba(255,255,255,0.45)', 140, 28) + '</div>' : '';
+    cards += '<div class="hub-kpi-card">' +
+      '<div class="hub-kpi-value">' + k.value + '</div>' +
+      '<div class="hub-kpi-label">' + k.label + '</div>' +
+      sparkHtml +
+    '</div>';
   }
-  html += '</div></div></div>';
-  return html;
+  return '<div class="hub-hero">' +
+    '<div class="hub-hero-content">' +
+      '<h2><strong>Insight</strong> Harbor</h2>' +
+      '<div class="hub-hero-subtitle">M365 Copilot Analytics Dashboard</div>' +
+      '<div class="hub-kpi-row">' + cards + '</div>' +
+    '</div>' +
+  '</div>';
 }
 
-function getHeroKPIs(segment) {
-  if (segment === 'm365') {
-    return [
-      { value: '1,616', label: 'Active Users', spark: [980,1050,1120,1200,1350,1480,1616] },
-      { value: '84%', label: 'Adoption Rate', spark: [62,66,70,74,78,81,84] },
-      { value: '4.9', label: 'Avg Sessions / User / Wk', spark: [3.4,3.6,3.9,4.1,4.4,4.7,4.9] },
-      { value: '<span style="color:#6FCF97">\u25CF</span> Healthy', label: 'Pipeline Status' }
-    ];
-  }
-  if (segment === 'unlicensed') {
-    return [
-      { value: '2,585', label: 'Active Users', spark: [1600,1820,2000,2150,2300,2440,2585] },
-      { value: '62%', label: 'Engagement Rate', spark: [44,48,51,54,57,60,62] },
-      { value: '3.2', label: 'Avg Sessions / User / Wk', spark: [2.0,2.3,2.5,2.7,2.9,3.0,3.2] },
-      { value: '162', label: 'License Candidates', spark: [80,95,108,122,138,150,162] }
-    ];
-  }
+function getHeroKPIs() {
   return [
     { value: '4,201', label: 'Total Active Users', spark: [2600,2900,3200,3400,3700,3950,4201] },
     { value: '1,616', label: 'M365 Copilot Users', spark: [980,1050,1120,1200,1350,1480,1616] },
-    { value: '2,585', label: 'Unlicensed Chat Users', spark: [1600,1820,2000,2150,2300,2440,2585] },
-    { value: '180', label: 'Agent Users', spark: [30,55,80,105,130,155,180] }
+    { value: '2,585', label: 'Copilot (Unlicensed) Users', spark: [1600,1820,2000,2150,2300,2440,2585] },
+    { value: '169', label: 'Active Agents', spark: [80,95,104,118,132,151,169] }
   ];
 }
 
 function renderSegmentSelector() {
-  var keys = ['m365', 'unlicensed', 'combined'];
-  var html = '<div class="segment-selector">';
-  for (var i = 0; i < keys.length; i++) {
-    var key = keys[i];
-    var seg = SEGMENTS[key];
-    var active = STATE.segment === key;
-    var cls = 'segment-tab' + (active ? ' active' : '');
-    var style = active ? ' style="background:' + seg.color + ';border-color:' + seg.color + '"' : '';
-    html += '<button class="' + cls + '"' + style + ' onclick="setSegment(\'' + key + '\')">' + seg.label + '</button>';
-  }
-  html += '</div>';
-  return html;
+  return '';
 }
 
-function getMiniVizHTML(key, segment) {
-  var seg = segment;
-  var c = SEGMENTS[seg].color;
-  // ── Usage Trends: sparkline ──
-  if (key === 'usage-trends') {
-    var d = seg === 'm365' ? [320,380,350,410,460,440,510] : seg === 'unlicensed' ? [520,560,590,640,680,710,750] : [840,940,940,1050,1140,1150,1260];
-    return sparklineSVG(d, c, 140, 32);
+function sparklineSVG(data, color, w, h) {
+  if (!data || data.length < 2) return '';
+  var min = Math.min.apply(null, data);
+  var max = Math.max.apply(null, data);
+  var range = max - min || 1;
+  var pad = 2;
+  var points = [];
+  for (var i = 0; i < data.length; i++) {
+    var x = pad + (i / (data.length - 1)) * (w - pad * 2);
+    var y = pad + (1 - (data[i] - min) / range) * (h - pad * 2);
+    points.push(x.toFixed(1) + ',' + y.toFixed(1));
   }
-  // ── Leaderboard: mini ranked bars ──
-  if (key === 'leaderboard') {
-    var bars = seg === 'm365' ? [{l:'Finance',p:88},{l:'Legal',p:72},{l:'IT',p:65}] : seg === 'unlicensed' ? [{l:'Marketing',p:82},{l:'Sales',p:70},{l:'HR',p:58}] : [{l:'Finance',p:88},{l:'Marketing',p:82},{l:'Legal',p:72}];
-    var h = '';
-    for (var i = 0; i < bars.length; i++) {
-      h += '<div class="mini-bar-row">' +
-        '<span class="mini-bar-label">' + bars[i].l + '</span>' +
-        '<div class="mini-bar-track"><div class="mini-bar-fill" style="width:' + bars[i].p + '%;background:' + c + ';opacity:' + (1 - i * 0.25) + '"></div></div>' +
-        '<span class="mini-bar-pct">' + bars[i].p + '%</span></div>';
+  return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" xmlns="http://www.w3.org/2000/svg">' +
+    '<polyline fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="' + points.join(' ') + '"/>' +
+  '</svg>';
+}
+
+function getMiniVizHTML(key) {
+  var c = '#4B2D8E';
+  if (key === 'agents') {
+    return sparklineSVG([80,95,104,118,132,151,169], c, 140, 32);
+  }
+  if (key === 'copilot-unlicensed') {
+    var barsA = [{l:'Marketing',p:82},{l:'Sales',p:70},{l:'HR',p:58}];
+    var hA = '';
+    for (var i = 0; i < barsA.length; i++) {
+      hA += '<div class="mini-bar-row">' +
+        '<span class="mini-bar-label">' + barsA[i].l + '</span>' +
+        '<div class="mini-bar-track"><div class="mini-bar-fill" style="width:' + barsA[i].p + '%;background:' + c + ';opacity:' + (1 - i * 0.2) + '"></div></div>' +
+        '<span class="mini-bar-pct">' + barsA[i].p + '%</span></div>';
     }
-    return h;
+    return hA;
   }
-  // ── Health Check: status dots ──
-  if (key === 'health-check') {
-    return '<div class="status-row">' +
-      '<span class="status-dot"><span class="dot green"></span>Ingest</span>' +
-      '<span class="status-dot"><span class="dot green"></span>Transform</span>' +
-      '<span class="status-dot"><span class="dot green"></span>API</span>' +
-      '</div>';
+  if (key === 'm365-copilot') {
+    return sparklineSVG([980,1050,1120,1200,1350,1480,1616], c, 140, 32);
   }
-  // ── Use Cases: mini horizontal bars (workloads) ──
-  if (key === 'use-cases') {
-    var uc = seg === 'm365' ? [{l:'Teams',p:42},{l:'Word',p:28},{l:'Excel',p:18}] : seg === 'unlicensed' ? [{l:'Chat',p:67},{l:'Web',p:20},{l:'Mobile',p:13}] : [{l:'Teams',p:38},{l:'Chat',p:32},{l:'Word',p:18}];
-    var h = '';
-    for (var i = 0; i < uc.length; i++) {
-      h += '<div class="mini-bar-row">' +
-        '<span class="mini-bar-label">' + uc[i].l + '</span>' +
-        '<div class="mini-bar-track"><div class="mini-bar-fill" style="width:' + uc[i].p + '%;background:' + c + ';opacity:' + (1 - i * 0.2) + '"></div></div>' +
-        '<span class="mini-bar-pct">' + uc[i].p + '%</span></div>';
+  if (key === 'copilot-overall') {
+    var barsB = [{l:'M365',p:38},{l:'Unlicensed',p:54},{l:'Agents',p:8}];
+    var hB = '';
+    for (var j = 0; j < barsB.length; j++) {
+      hB += '<div class="mini-bar-row">' +
+        '<span class="mini-bar-label">' + barsB[j].l + '</span>' +
+        '<div class="mini-bar-track"><div class="mini-bar-fill" style="width:' + barsB[j].p + '%;background:' + c + ';opacity:' + (1 - j * 0.2) + '"></div></div>' +
+        '<span class="mini-bar-pct">' + barsB[j].p + '%</span></div>';
     }
-    return h;
-  }
-  // ── Habit Formation: sparkline ──
-  if (key === 'habit-formation') {
-    var d = seg === 'm365' ? [18,22,25,27,30,34,38] : seg === 'unlicensed' ? [10,12,14,16,18,21,24] : [14,17,19,22,24,27,31];
-    return sparklineSVG(d, c, 140, 32);
-  }
-  // ── License Prioritization: progress bar ──
-  if (key === 'license-prioritization') {
-    var pct = seg === 'unlicensed' ? 63 : 63;
-    return '<div class="mini-progress"><div class="mini-progress-fill" style="width:' + pct + '%;background:' + c + '"></div></div>' +
-      '<div class="mini-progress-label">' + pct + '% of candidates scored &gt;80</div>';
+    return hB;
   }
   return '';
 }
@@ -1403,9 +1863,8 @@ function renderNavTiles() {
   for (var i = 0; i < dsKeys.length; i++) {
     var key = dsKeys[i];
     var ds = DATASETS[key];
-    if (!ds.segments.includes(STATE.segment)) continue;
     var viewCount = ds.views.length;
-    var metric = ds.metrics[STATE.segment] || '';
+    var metric = ds.metrics.overall || '';
     var icon = ICONS[key] || '';
 
     html += '<div class="nav-tile" onclick="navigate(\'' + key + '\')">';
@@ -1416,13 +1875,2287 @@ function renderNavTiles() {
     }
     html += '</div>';
     html += '<div class="nav-tile-desc">' + ds.description + '</div>';
-    html += '<div class="nav-tile-viz">' + getMiniVizHTML(key, STATE.segment) + '</div>';
+    html += '<div class="nav-tile-viz">' + getMiniVizHTML(key) + '</div>';
     html += '<div class="nav-tile-footer">';
     html += '<span class="nav-tile-metric">' + metric + '</span>';
     html += '<span class="nav-tile-arrow">\u2192</span>';
     html += '</div>';
     html += '</div>';
   }
+  html += '</div>';
+  return html;
+}
+
+// ─────────────────────────────────────────────────────────────
+// AGENTS USAGE TRENDS — Sample Data
+// ─────────────────────────────────────────────────────────────
+var AGENTS_DATA = {
+  kpis: {
+    mostPopular: 'Visual Creator',
+    mostVersatile: 'Visual Creator',
+    activeAgents: 169,
+    users: 180,
+    sessionsWeekly: 3.60,
+    activeDaysWeekly: 1.39
+  },
+  trend: {
+    labels: ['Mar 10','Mar 17','Mar 24','Mar 31','Apr 7','Apr 14','Apr 21','Apr 28','May 5'],
+    activeUsers: [48,40,42,30,38,50,33,55,45],
+    totalSessions: [192,161,164,70,142,223,93,280,174]
+  },
+  sessionsPerUser: [
+    {dept:'Finance',value:7.6},{dept:'Legal',value:4.6},{dept:'Sales',value:3.6},
+    {dept:'Operations',value:3.5},{dept:'Support',value:3.0},{dept:'HR',value:2.6},
+    {dept:'Marketing',value:2.1},{dept:'IT',value:2.0}
+  ],
+  agents: [
+    {name:'Visual Creator',value:297,desc:'Advanced visual content creation assistant'},
+    {name:'Secure Message Assistant',value:157,desc:'Secure communication and messaging helper'},
+    {name:'IT Service Agent',value:138,desc:'IT service desk and troubleshooting agent'},
+    {name:'CRU QA Analyzer Agent',value:115,desc:'Quality assurance analysis tool'},
+    {name:'CEO FRL Generator',value:70,desc:'Financial report and letter generator'},
+    {name:'Analyst (Frontline)',value:41,desc:'Frontline data analysis assistant'},
+    {name:'BAU Complaint Handler',value:40,desc:'Business as usual complaint management'},
+    {name:'AM PMO Agent',value:37,desc:'Project management office assistant'},
+    {name:'Researcher',value:35,desc:'Advanced research assistant using frontier models'},
+    {name:'Researcher Pro',value:33,desc:'Enhanced research with advanced capabilities'},
+    {name:'Control Assistant',value:27,desc:'Compliance and control management helper'},
+    {name:'Analyst',value:23,desc:'General purpose data analysis agent'},
+    {name:'Risk and Compliance',value:23,desc:'Risk assessment and compliance monitoring'},
+    {name:'Researcher Lite',value:13,desc:'Lightweight research assistant'},
+    {name:'Data Explorer',value:10,desc:'Data exploration and visualization tool'}
+  ]
+};
+
+// ─────────────────────────────────────────────────────────────
+// AGENTS USAGE TRENDS — Custom Renderer
+// ─────────────────────────────────────────────────────────────
+function renderAgentsUsageTrends() {
+  var ds = DATASETS['agents'];
+  var seg = SEGMENTS[STATE.segment];
+  var k = AGENTS_DATA.kpis;
+
+  var html = '<div class="dataset-layout">';
+  html += '<main class="dataset-main">';
+
+  // Sub-tabs
+  html += '<div class="sub-tabs">';
+  for (var i = 0; i < ds.views.length; i++) {
+    var cls = 'sub-tab' + (STATE.subView === i ? ' active' : '');
+    html += '<button class="' + cls + '" onclick="navigate(\'agents\',' + i + ')">' + ds.views[i] + '</button>';
+  }
+  html += '</div>';
+
+  // Segment label
+  html += '<div style="font-size:0.75rem;color:' + seg.color + ';font-weight:600;margin-bottom:0.5rem;">' + seg.label + ' \u2014 ' + ds.views[STATE.subView] + '</div>';
+
+  // KPI Row (6 cards)
+  html += '<div class="ds-kpi-row">';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-label">Most Popular Agent</div><div class="ds-kpi-value" style="font-size:1rem">' + k.mostPopular + '</div></div>';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-label">Most Versatile...</div><div class="ds-kpi-value" style="font-size:1rem">' + k.mostVersatile + '</div></div>';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">' + k.activeAgents + '</div><div class="ds-kpi-label">Active Agents</div></div>';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">' + k.users + '</div><div class="ds-kpi-label">Users</div></div>';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">' + k.sessionsWeekly.toFixed(2) + '</div><div class="ds-kpi-label">Sessions (Weekly)</div></div>';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">' + k.activeDaysWeekly.toFixed(2) + '</div><div class="ds-kpi-label">Active Days (Weekly)</div></div>';
+  html += '</div>';
+
+  // Top row: 2 charts side by side
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem;">';
+
+  // Chart 1: Agent Actions Trends (dual-axis)
+  html += '<div class="chart-card">';
+  html += '<div class="chart-title">Agent Actions Trends</div>';
+  html += '<div class="chart-legend-inline">';
+  html += '<span><span class="dot" style="background:#A0A0A0"></span> Active Users</span>';
+  html += '<span><span class="dot" style="background:#4B2D8E"></span> Total Sessions</span>';
+  html += '</div>';
+  html += '<div class="chart-wrap"><canvas id="chart-agent-trend"></canvas></div>';
+  html += '</div>';
+
+  // Chart 2: Weekly Sessions Per User (bar by department)
+  html += '<div class="chart-card">';
+  html += '<div class="chart-title">Weekly Sessions Per User</div>';
+  html += '<div class="chart-wrap"><canvas id="chart-agent-sessions"></canvas></div>';
+  html += '</div>';
+
+  html += '</div>'; // top row grid
+
+  // Bottom row: Treemap + Agent Detail
+  html += '<div class="agents-bottom-row">';
+
+  // Treemap
+  html += '<div class="treemap-card">';
+  html += '<div class="treemap-header">';
+  html += '<div class="chart-title" style="margin-bottom:0">Total Number of Sessions by Agent</div>';
+  html += '<div class="treemap-note">Minimum of 3 users</div>';
+  html += '</div>';
+  html += '<div class="treemap-note">You can filter by Agent in this visual</div>';
+  html += '<div id="treemap-container" class="treemap-container"></div>';
+  html += '</div>';
+
+  // Agent Detail
+  html += '<div class="agent-detail-card">';
+  html += '<h3>Agent Detail</h3>';
+  html += '<div class="agent-detail-label">Description</div>';
+  html += '<div id="agent-detail-text" class="agent-detail-text">Advanced research assistant using frontier models</div>';
+  html += '</div>';
+
+  html += '</div>'; // agents-bottom-row
+  html += '</main>';
+
+  // Filter panel
+  html += '<aside class="filter-panel">';
+  html += '<div class="filter-header">Filters</div>';
+  html += '<div class="filter-section">';
+  html += '<label class="filter-label">Date</label>';
+  html += '<div class="m365-date-wrap"><input class="filter-date m365-date-input" type="date" value="2025-03-01" /></div>';
+  html += '<div class="m365-date-wrap" style="margin-top:0.25rem"><input class="filter-date m365-date-input" type="date" value="2025-06-06" /></div>';
+  html += '</div>';
+  var agentFilters = ['Organization', 'Agent Review', 'Agent Name', 'Agent Creator', 'Agent Type', 'Last Activity Date', 'Agent Versatility', 'Agent Usage Rank', 'License Status'];
+  agentFilters.forEach(function(f) {
+    html += '<div class="filter-section"><label class="filter-label">' + f + '</label>';
+    html += '<select class="filter-select"><option>All</option></select></div>';
+  });
+  html += '</aside>';
+
+  html += '</div>'; // dataset-layout
+  return html;
+}
+
+// ─────────────────────────────────────────────────────────────
+// AGENTS — Treemap Layout (binary partition)
+// ─────────────────────────────────────────────────────────────
+function computeTreemap(items, x, y, w, h) {
+  if (items.length === 0) return [];
+  if (items.length === 1) {
+    return [{ name: items[0].name, value: items[0].value, desc: items[0].desc, x: x, y: y, w: w, h: h }];
+  }
+  var total = 0;
+  for (var i = 0; i < items.length; i++) total += items[i].value;
+  if (total === 0) return [];
+
+  var sum = 0, bestIdx = 0, bestDiff = Infinity;
+  for (var i = 0; i < items.length - 1; i++) {
+    sum += items[i].value;
+    var diff = Math.abs(sum / total - 0.5);
+    if (diff < bestDiff) { bestDiff = diff; bestIdx = i; }
+  }
+  var left = items.slice(0, bestIdx + 1);
+  var right = items.slice(bestIdx + 1);
+  var leftTotal = 0;
+  for (var i = 0; i < left.length; i++) leftTotal += left[i].value;
+  var ratio = leftTotal / total;
+
+  if (w >= h) {
+    return computeTreemap(left, x, y, w * ratio, h)
+      .concat(computeTreemap(right, x + w * ratio, y, w * (1 - ratio), h));
+  } else {
+    return computeTreemap(left, x, y, w, h * ratio)
+      .concat(computeTreemap(right, x, y + h * ratio, w, h * (1 - ratio)));
+  }
+}
+
+function renderTreemap() {
+  var container = document.getElementById('treemap-container');
+  if (!container) return;
+
+  var sorted = AGENTS_DATA.agents.slice().sort(function(a, b) { return b.value - a.value; });
+  var layout = computeTreemap(sorted, 0, 0, 100, 100);
+
+  var purpleScale = [
+    '#1B0D3F','#2D1566','#3B1A6E','#4B2D8E','#5C3D99',
+    '#6B4FA2','#7B63B3','#8B78C2','#9B8DD1','#A99BD8',
+    '#B7AAE0','#C5B9E7','#D3C8EE','#E0D6F4','#EDE4FA'
+  ];
+
+  container.innerHTML = '';
+  for (var i = 0; i < layout.length; i++) {
+    var item = layout[i];
+    var div = document.createElement('div');
+    div.className = 'treemap-cell';
+    div.style.left = item.x + '%';
+    div.style.top = item.y + '%';
+    div.style.width = item.w + '%';
+    div.style.height = item.h + '%';
+    div.style.backgroundColor = purpleScale[i % purpleScale.length];
+    div.title = item.name + ': ' + item.value + ' sessions';
+
+    var area = item.w * item.h;
+    if (area > 80) {
+      div.innerHTML = '<span class="treemap-cell-label">' + item.name + '</span><span class="treemap-cell-value">' + item.value + '</span>';
+    } else if (area > 30) {
+      var short = item.name.length > 18 ? item.name.slice(0, 16) + '...' : item.name;
+      div.innerHTML = '<span class="treemap-cell-label">' + short + '</span><span class="treemap-cell-value">' + item.value + '</span>';
+    } else if (area > 10) {
+      div.innerHTML = '<span class="treemap-cell-value">' + item.value + '</span>';
+    }
+
+    div.setAttribute('data-agent', item.name);
+    div.onclick = (function(name) {
+      return function() { showAgentDetail(name); };
+    })(item.name);
+    container.appendChild(div);
+  }
+}
+
+function showAgentDetail(agentName) {
+  var agent = null;
+  for (var i = 0; i < AGENTS_DATA.agents.length; i++) {
+    if (AGENTS_DATA.agents[i].name === agentName) { agent = AGENTS_DATA.agents[i]; break; }
+  }
+  var textEl = document.getElementById('agent-detail-text');
+  if (agent && textEl) textEl.textContent = agent.desc;
+
+  var cells = document.querySelectorAll('.treemap-cell');
+  for (var i = 0; i < cells.length; i++) {
+    cells[i].style.outline = cells[i].getAttribute('data-agent') === agentName ? '2px solid #252423' : 'none';
+  }
+}
+
+function initAgentsUsageTrendsCharts() {
+  destroyCharts();
+  var d = AGENTS_DATA;
+
+  // ── Chart 1: Agent Actions Trends (dual-axis) ──
+  var ctx1 = document.getElementById('chart-agent-trend');
+  if (ctx1) {
+    ACTIVE_CHARTS.push(new Chart(ctx1, {
+      type: 'line',
+      data: {
+        labels: d.trend.labels,
+        datasets: [{
+          label: 'Active Users',
+          data: d.trend.activeUsers,
+          borderColor: '#A0A0A0',
+          backgroundColor: 'transparent',
+          pointBackgroundColor: '#A0A0A0',
+          pointRadius: 4,
+          borderWidth: 2,
+          tension: 0.35,
+          yAxisID: 'y',
+          datalabels: { display: true, align: 'top', offset: 6, color: '#666', font: { size: 10, weight: '600' } }
+        }, {
+          label: 'Total Sessions',
+          data: d.trend.totalSessions,
+          borderColor: '#4B2D8E',
+          backgroundColor: 'transparent',
+          pointBackgroundColor: '#4B2D8E',
+          pointRadius: 4,
+          borderWidth: 2,
+          tension: 0.35,
+          yAxisID: 'y1',
+          datalabels: { display: true, align: 'top', offset: 6, color: '#4B2D8E', font: { size: 10, weight: '600' } }
+        }]
+      },
+      plugins: [ChartDataLabels],
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#888', font: { size: 10 }, maxTicksLimit: 5 }, grid: { color: '#F0F0F0' } },
+          y: { position: 'left', title: { display: true, text: 'Active Users', color: '#888', font: { size: 10 } }, ticks: { color: '#888', font: { size: 10 } }, grid: { color: '#F0F0F0' }, min: 20 },
+          y1: { position: 'right', title: { display: true, text: 'Total Sessions', color: '#888', font: { size: 10 } }, ticks: { color: '#888', font: { size: 10 } }, grid: { drawOnChartArea: false }, min: 0 }
+        }
+      }
+    }));
+  }
+
+  // ── Chart 2: Weekly Sessions Per User by Department ──
+  var ctx2 = document.getElementById('chart-agent-sessions');
+  if (ctx2) {
+    var barColors = d.sessionsPerUser.map(function(_, i) {
+      var t = i / Math.max(d.sessionsPerUser.length - 1, 1);
+      var l = 18 + t * 42;
+      return 'hsl(270, 55%, ' + l + '%)';
+    });
+    ACTIVE_CHARTS.push(new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: d.sessionsPerUser.map(function(x) { return x.dept; }),
+        datasets: [{
+          data: d.sessionsPerUser.map(function(x) { return x.value; }),
+          backgroundColor: barColors,
+          borderRadius: 0,
+          barPercentage: 0.7,
+          datalabels: { display: true, anchor: 'end', align: 'top', offset: 2, color: '#666', font: { size: 10, weight: '600' }, formatter: function(v) { return v.toFixed(1); } }
+        }]
+      },
+      plugins: [ChartDataLabels],
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#888', font: { size: 9 }, maxRotation: 45, minRotation: 25 }, grid: { display: false } },
+          y: { title: { display: true, text: 'Weekly Sessions Per User', color: '#888', font: { size: 10 } }, ticks: { color: '#888', font: { size: 10 } }, grid: { color: '#F0F0F0' }, beginAtZero: true, suggestedMax: 9 }
+        }
+      }
+    }));
+  }
+
+  // ── Treemap ──
+  renderTreemap();
+}
+
+// ─────────────────────────────────────────────────────────────
+// CHART INSTANCE TRACKER — destroy before re-creating
+// ─────────────────────────────────────────────────────────────
+var ACTIVE_CHARTS = [];
+function destroyCharts() {
+  for (var i = 0; i < ACTIVE_CHARTS.length; i++) {
+    try { ACTIVE_CHARTS[i].destroy(); } catch(e) {}
+  }
+  ACTIVE_CHARTS = [];
+}
+
+// ─────────────────────────────────────────────────────────────
+// M365 COPILOT USAGE TRENDS — Custom Renderer
+// ─────────────────────────────────────────────────────────────
+function renderM365UsageTrends() {
+  var ds = DATASETS['m365-copilot'];
+
+  var html = '<div class="dataset-layout">';
+  html += '<main class="dataset-main">';
+
+  // Sub-tabs
+  html += renderM365CopilotSubTabs();
+
+  // KPI Row
+  html += '<div class="ds-kpi-row">';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">1,616</div><div class="ds-kpi-label">Active Users</div></div>';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">34K</div><div class="ds-kpi-label">Total Sessions (excl. Agents)</div></div>';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">3.1</div><div class="ds-kpi-label">Sessions (Weekly - Per User)</div></div>';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">1.77</div><div class="ds-kpi-label">Active Days (Weekly - Per User)</div></div>';
+  html += '</div>';
+
+  // Chart grid (4 real charts)
+  html += '<div class="chart-grid">';
+
+  // Chart 1: M365 Copilot Usage Trends (dual-axis line)
+  html += '<div class="chart-card">';
+  html += '<div class="chart-title">M365 Copilot Usage Trends</div>';
+  html += '<div class="chart-legend-inline">';
+  html += '<span><span class="dot" style="background:#B0B0B0"></span> Active Users</span>';
+  html += '<span><span class="dot" style="background:#1976D2"></span> Sessions Per User</span>';
+  html += '</div>';
+  html += '<div class="chart-wrap"><canvas id="chart-usage-trend"></canvas></div>';
+  html += '</div>';
+
+  // Chart 2: Weekly Sessions Per User (bar by department)
+  html += '<div class="chart-card">';
+  html += '<div class="chart-title">Weekly Sessions Per User</div>';
+  html += '<div class="chart-wrap"><canvas id="chart-sessions-dept"></canvas></div>';
+  html += '</div>';
+
+  // Chart 3: Weekly Sessions by User Rank (donut)
+  html += '<div class="chart-card">';
+  html += '<div class="chart-title">Weekly Sessions by User Rank</div>';
+  html += '<div class="chart-wrap"><canvas id="chart-user-rank"></canvas></div>';
+  html += '</div>';
+
+  // Chart 4: Copilot Adoption Thresholds (stacked bar)
+  html += '<div class="chart-card">';
+  html += '<div class="chart-title">Copilot Adoption Thresholds</div>';
+  html += '<div class="chart-legend-inline" style="flex-wrap:wrap">';
+  html += '<span><span class="dot" style="background:#B0B0B0"></span> Bottom 25%</span>';
+  html += '<span><span class="dot" style="background:#90CAF9"></span> 25-50%</span>';
+  html += '<span><span class="dot" style="background:#42A5F5"></span> 50-75%</span>';
+  html += '<span><span class="dot" style="background:#1976D2"></span> 75-90%</span>';
+  html += '<span><span class="dot" style="background:#0D47A1"></span> Top 10%</span>';
+  html += '</div>';
+  html += '<div class="chart-wrap"><canvas id="chart-adoption"></canvas></div>';
+  html += '</div>';
+
+  html += '</div>'; // chart-grid
+  html += '</main>';
+
+  html += '</main>';
+  html += renderM365CopilotFilterPanel();
+  html += '</div>';
+  return html;
+}
+
+function initM365UsageTrendsCharts() {
+  destroyCharts();
+
+  var months = ['Mar 2025', 'Apr 2025', 'May 2025', 'Jun 2025'];
+  var weeks = ['W1','W2','W3','W4','W5','W6','W7','W8','W9','W10','W11','W12','W13','W14','W15','W16'];
+
+  // ── Chart 1: Dual-axis usage trend ──
+  var ctx1 = document.getElementById('chart-usage-trend');
+  if (ctx1) {
+    var activeUsers = [0, 200, 400, 500, 600, 580, 650, 680, 700, 720, 740, 800, 780, 810, 850, 900];
+    var sessionsPerUser = [0, 1.6, 3.2, 4.4, 4.2, 3.8, 4.0, 5.5, 5.5, 5.9, 4.0, 5.5, 5.3, 5.5, 5.0, 5.5];
+    ACTIVE_CHARTS.push(new Chart(ctx1, {
+      type: 'line',
+      data: {
+        labels: weeks,
+        datasets: [{
+          label: 'Active Users',
+          data: activeUsers,
+          borderColor: '#B0B0B0',
+          backgroundColor: 'rgba(176,176,176,0.08)',
+          borderWidth: 1.5,
+          pointRadius: 3,
+          pointBackgroundColor: '#B0B0B0',
+          fill: true,
+          yAxisID: 'y',
+          tension: 0.3
+        }, {
+          label: 'Sessions Per User',
+          data: sessionsPerUser,
+          borderColor: '#1976D2',
+          backgroundColor: 'transparent',
+          borderWidth: 2.5,
+          pointRadius: 4,
+          pointBackgroundColor: '#1976D2',
+          fill: false,
+          yAxisID: 'y1',
+          tension: 0.3
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, datalabels: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 6 } },
+          y: { position: 'left', title: { display: true, text: 'Active Users', font: { size: 10 } }, grid: { color: '#EBEBEB' }, ticks: { font: { size: 9 } } },
+          y1: { position: 'right', title: { display: true, text: 'Sessions Per User', font: { size: 10 } }, grid: { drawOnChartArea: false }, ticks: { font: { size: 9 } }, min: 0, max: 7 }
+        }
+      }
+    }));
+  }
+
+  // ── Chart 2: Weekly Sessions Per User by Department ──
+  var ctx2 = document.getElementById('chart-sessions-dept');
+  if (ctx2) {
+    var depts = ['Operations', 'Finance', 'Sales', 'IT', 'HR', 'Marketing', 'Legal', 'Support'];
+    var vals =  [4.3, 3.5, 3.0, 2.8, 2.8, 2.8, 2.7, 2.6];
+    var blues = ['#0D47A1','#1565C0','#1976D2','#1E88E5','#42A5F5','#64B5F6','#90CAF9','#BBDEFB'];
+    ACTIVE_CHARTS.push(new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: depts,
+        datasets: [{
+          data: vals,
+          backgroundColor: blues,
+          borderRadius: 2,
+          barPercentage: 0.7
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        indexAxis: 'x',
+        plugins: {
+          legend: { display: false },
+          datalabels: {
+            anchor: 'end', align: 'end',
+            font: { size: 9, weight: 'bold' },
+            color: '#333',
+            formatter: function(v) { return v.toFixed(1); }
+          }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 8 }, maxRotation: 45 } },
+          y: { title: { display: true, text: 'Weekly Sessions Per User', font: { size: 10 } }, grid: { color: '#EBEBEB' }, ticks: { font: { size: 9 } }, beginAtZero: true, max: 5 }
+        }
+      },
+      plugins: [ChartDataLabels]
+    }));
+  }
+
+  // ── Chart 3: Weekly Sessions by User Rank (Donut) ──
+  var ctx3 = document.getElementById('chart-user-rank');
+  if (ctx3) {
+    var rankLabels = ['5. Top 10% Users', '4. 75-90% Users', '3. 50-75% Users', '2. 25-50% Users', '1. Bottom 25% Users'];
+    var rankData = [1, 2, 12, 4, 2];
+    var rankColors = ['#0D47A1', '#1976D2', '#42A5F5', '#90CAF9', '#B0B0B0'];
+    ACTIVE_CHARTS.push(new Chart(ctx3, {
+      type: 'doughnut',
+      data: {
+        labels: rankLabels,
+        datasets: [{
+          data: rankData,
+          backgroundColor: rankColors,
+          borderWidth: 2,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        cutout: '55%',
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: { font: { size: 10 }, boxWidth: 12, padding: 8 }
+          },
+          datalabels: {
+            color: '#fff',
+            font: { size: 11, weight: 'bold' },
+            formatter: function(v) { return v; }
+          }
+        }
+      },
+      plugins: [ChartDataLabels]
+    }));
+  }
+
+  // ── Chart 4: Copilot Adoption Thresholds (100% stacked bar) ──
+  var ctx4 = document.getElementById('chart-adoption');
+  if (ctx4) {
+    var adoptionMonths = ['February', 'March', 'April', 'May', 'June'];
+    // Each tier as percentage of total per month
+    var tier1 = [40, 35, 30, 25, 22]; // Bottom 25%
+    var tier2 = [25, 25, 25, 25, 23]; // 25-50%
+    var tier3 = [20, 22, 25, 27, 30]; // 50-75%
+    var tier4 = [10, 12, 13, 15, 16]; // 75-90%
+    var tier5 = [5, 6, 7, 8, 9];      // Top 10%
+    ACTIVE_CHARTS.push(new Chart(ctx4, {
+      type: 'bar',
+      data: {
+        labels: adoptionMonths,
+        datasets: [
+          { label: '1. Bottom 25%',  data: tier1, backgroundColor: '#B0B0B0' },
+          { label: '2. 25-50%',      data: tier2, backgroundColor: '#90CAF9' },
+          { label: '3. 50-75%',      data: tier3, backgroundColor: '#42A5F5' },
+          { label: '4. 75-90%',      data: tier4, backgroundColor: '#1976D2' },
+          { label: '5. Top 10%',     data: tier5, backgroundColor: '#0D47A1' }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          datalabels: { display: false }
+        },
+        scales: {
+          x: { stacked: true, grid: { display: false }, ticks: { font: { size: 9 } } },
+          y: {
+            stacked: true,
+            title: { display: true, text: 'Weekly Sessions Per User', font: { size: 10 } },
+            grid: { color: '#EBEBEB' },
+            ticks: { font: { size: 9 }, callback: function(v) { return v + '%'; } },
+            max: 100
+          }
+        }
+      }
+    }));
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// LEADERBOARD — HEATMAP HELPERS
+// ─────────────────────────────────────────────────────────────
+function hmBg(val, max, hue) {
+  if (!max) return '';
+  var t = Math.min(val / max, 1);
+  var l = 90 - Math.round(t * 50);
+  var textColor = t > 0.45 ? '#fff' : '#333';
+  return 'background:hsl(' + hue + ',55%,' + l + '%);color:' + textColor;
+}
+
+function fmtNum(n) {
+  if (n >= 1000) return (n / 1000).toFixed(n >= 10000 ? 0 : 1) + 'K';
+  return n.toLocaleString();
+}
+
+// ─────────────────────────────────────────────────────────────
+// AGENTS LEADERBOARD
+// ─────────────────────────────────────────────────────────────
+function renderAgentsLeaderboard() {
+  var ds = DATASETS['agents'];
+  var seg = SEGMENTS[STATE.segment];
+  var orgData = [
+    { org: 'IT',         users: 26, sessions: 197,  spu: 7.6  },
+    { org: 'Sales',      users: 26, sessions: 375,  spu: 14.4 },
+    { org: 'Finance',    users: 25, sessions: 258,  spu: 10.3 },
+    { org: 'HR',         users: 25, sessions: 234,  spu: 9.4  },
+    { org: 'Support',    users: 23, sessions: 152,  spu: 6.6  },
+    { org: 'Operations', users: 21, sessions: 422,  spu: 20.1 },
+    { org: 'Marketing',  users: 20, sessions: 100,  spu: 5.0  },
+    { org: 'Legal',      users: 14, sessions: 272,  spu: 19.4 }
+  ];
+  var agentData = [
+    { name: 'Visual Creator',              users: 99, sessions: 297, spu: 3.0,  type: '',           features: '',                              creator: '',                          desc: '' },
+    { name: 'Researcher',                  users: 21, sessions: 35,  spu: 1.7,  type: '',           features: '',                              creator: '',                          desc: '' },
+    { name: 'Analyst',                     users: 17, sessions: 23,  spu: 1.4,  type: '',           features: '',                              creator: '',                          desc: '' },
+    { name: 'Researcher (Frontier)',       users: 13, sessions: 33,  spu: 2.5,  type: '',           features: '',                              creator: '',                          desc: '' },
+    { name: 'IT Service Agent',            users: 9,  sessions: 138, spu: 15.3, type: 'EntraAgent', features: '\ud83d\udcac in Teams<br>\ud83d\udce7 in Outlook<br>\u21B3 in Office', creator: '5c8ns1bvqkwxjk33@contoso.com', desc: 'Manages IT service requests' },
+    { name: 'Secure Message Assistant',    users: 7,  sessions: 157, spu: 22.4, type: 'EntraAgent', features: '\ud83d\udcac in Teams<br>\ud83d\udce7 in Outlook<br>\u21B3 in Office', creator: 'hme2oyuj55n5joji@contoso.com', desc: 'Production version' },
+    { name: 'Analyst (Frontier)',          users: 6,  sessions: 41,  spu: 6.8,  type: '',           features: '',                              creator: '',                          desc: '' },
+    { name: 'BAU Complaint Agent Checker', users: 5,  sessions: 40,  spu: 8.0,  type: 'EntraAgent', features: '\ud83d\udcac in Teams<br>\u21B3 in Office', creator: 'pkxaeha78riltp0b@contoso.com', desc: 'Checks and validates' }
+  ];
+
+  var maxOrgSess = Math.max.apply(null, orgData.map(function(r){return r.sessions}));
+  var maxOrgSpu  = Math.max.apply(null, orgData.map(function(r){return r.spu}));
+  var maxAgSess  = Math.max.apply(null, agentData.map(function(r){return r.sessions}));
+  var maxAgSpu   = Math.max.apply(null, agentData.map(function(r){return r.spu}));
+
+  var html = '<div class="dataset-layout">';
+  html += '<main class="dataset-main agents-lb-main">';
+
+  // Sub-tabs
+  html += '<div class="sub-tabs">';
+  for (var i = 0; i < ds.views.length; i++) {
+    var cls = 'sub-tab' + (STATE.subView === i ? ' active' : '');
+    html += '<button class="' + cls + '" onclick="navigate(\'agents\',' + i + ')">' + ds.views[i] + '</button>';
+  }
+  html += '</div>';
+  html += '<div style="font-size:0.75rem;color:' + seg.color + ';font-weight:600;margin-bottom:0.5rem;">' + seg.label + ' \u2014 ' + ds.views[STATE.subView] + '</div>';
+
+  // KPI row
+  html += '<div class="agents-lb-kpi-row" style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.75rem">';
+  var kpis = [
+    { label: 'Most Popular',          value: 'Visual Creator' },
+    { label: 'Most Versatile',        value: 'Visual Creator' },
+    { label: 'Top Agent Builder',     value: '0' },
+    { label: 'Active Agents',         value: '169' },
+    { label: 'Users',                 value: '180' },
+    { label: 'Sessions (Weekly)',     value: '3.60' },
+    { label: 'Active Days (Weekly)',  value: '1.39' }
+  ];
+  kpis.forEach(function(k) {
+    html += '<div class="lb-kpi">';
+    html += '<div class="lb-kpi-bar"></div>';
+    html += '<div class="lb-kpi-body">';
+    html += '<div class="lb-kpi-label">' + k.label + '</div>';
+    html += '<div class="lb-kpi-value">' + k.value + '</div>';
+    html += '</div></div>';
+  });
+  html += '</div>';
+
+  // Tables row
+  html += '<div class="lb-tables-row agents-lb-row">';
+
+  // Left: Org leaderboard
+  html += '<div class="lb-table-card">';
+  html += '<div class="chart-title">Agent Usage Leaderboard</div>';
+  html += '<div class="hm-table-wrap agents-lb-left-wrap"><table class="hm-table agents-lb-left-table">';
+  html += '<thead><tr><th>Organization</th><th class="num">Users &#9660;</th><th class="num">Agent Sessions</th><th class="num">Sessions Per User</th></tr></thead><tbody>';
+  orgData.forEach(function(r) {
+    html += '<tr>';
+    html += '<td><span class="expand-icon">\u229E</span>' + r.org + '</td>';
+    html += '<td class="num">' + r.users + '</td>';
+    html += '<td class="hm" style="' + hmBg(r.sessions, maxOrgSess, 265) + '">' + fmtNum(r.sessions) + '</td>';
+    html += '<td class="hm" style="' + hmBg(r.spu, maxOrgSpu, 265) + '">' + r.spu.toFixed(1) + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div></div>';
+
+  // Right: Agents leaderboard
+  html += '<div class="lb-table-card">';
+  html += '<div class="chart-title">Agents Leaderboard</div>';
+  html += '<div class="lb-subtitle">Minimum of 3 users</div>';
+  html += '<div class="hm-table-wrap agents-lb-right-wrap"><table class="hm-table agents-lb-right-table">';
+  html += '<thead><tr><th>Agent Name</th><th class="num">Users &#9660;</th><th class="num">Agent Sessions</th><th class="num">Sessions Per User</th><th>Agent Type</th><th>Agent Features</th><th>Agent Creator</th><th>Agent Description</th></tr></thead><tbody>';
+  agentData.forEach(function(r) {
+    html += '<tr>';
+    html += '<td style="font-weight:600">' + r.name + '</td>';
+    html += '<td class="num">' + r.users + '</td>';
+    html += '<td class="hm" style="' + hmBg(r.sessions, maxAgSess, 265) + '">' + fmtNum(r.sessions) + '</td>';
+    html += '<td class="hm" style="' + hmBg(r.spu, maxAgSpu, 265) + '">' + r.spu.toFixed(1) + '</td>';
+    html += '<td>' + r.type + '</td>';
+    html += '<td style="white-space:normal;max-width:140px;font-size:0.72rem">' + r.features + '</td>';
+    html += '<td style="white-space:normal;min-width:160px;font-size:0.72rem">' + r.creator + '</td>';
+    html += '<td style="white-space:normal;max-width:160px;font-size:0.72rem;color:var(--text-secondary)">' + r.desc + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+
+  // Agent Features Legend — inside right card, under table
+  html += '<div class="lb-legend agents-lb-legend">';
+  html += '<h4 style="margin:0 0 0.35rem 0"><strong>Agent Features</strong> <span style="font-weight:400;color:var(--text-secondary)">(Legend)</span></h4>';
+  html += '<div class="lb-legend-inner">';
+  html += '<div class="lb-legend-col">';
+  html += '<div class="leg-label">Platforms:</div>';
+  html += '<div class="leg-item"><span class="leg-icon">\ud83d\udcac</span> in Teams <span class="leg-eq">=</span> Available in Microsoft Teams</div>';
+  html += '<div class="leg-item"><span class="leg-icon">\ud83d\udce7</span> in Outlook <span class="leg-eq">=</span> Available in Outlook</div>';
+  html += '<div class="leg-item"><span class="leg-icon">\u21B3</span> in Office <span class="leg-eq">=</span> Available across Microsoft 365 apps</div>';
+  html += '</div>';
+  html += '<div class="lb-legend-col">';
+  html += '<div class="leg-item"><span class="leg-icon">\ud83d\udcc4</span> <strong>SharePoint</strong> <span class="leg-eq">=</span> Can access SharePoint sites and files</div>';
+  html += '<div class="leg-item"><span class="leg-icon">\u2601</span> <strong>OneDrive</strong> <span class="leg-eq">=</span> Can access OneDrive files and folders</div>';
+  html += '<div class="leg-item"><span class="leg-icon">\ud83d\udd78</span> <strong>Graph</strong> <span class="leg-eq">=</span> Can extend to Microsoft Graph connectors</div>';
+  html += '<div class="leg-item"><span class="leg-icon">\ud83d\udcce</span> <strong>Files</strong> <span class="leg-eq">=</span> Contains uploaded files or documents</div>';
+  html += '</div>';
+  html += '</div></div>';
+
+  html += '</div>';
+  html += '</div>'; // lb-tables-row
+
+  html += '</main>';
+
+  // Filter panel
+  html += '<aside class="filter-panel">';
+  html += '<div class="filter-header">Filters</div>';
+  html += '<div class="filter-section">';
+  html += '<label class="filter-label">Date</label>';
+  html += '<div class="m365-date-wrap"><input class="filter-date m365-date-input" type="date" value="2025-03-01" /></div>';
+  html += '<div class="m365-date-wrap" style="margin-top:0.25rem"><input class="filter-date m365-date-input" type="date" value="2025-06-06" /></div>';
+  html += '</div>';
+  var filters = ['Organization', 'Agent Review', 'Agent Name', 'Agent Creator', 'Agent Type', 'Last Activity Date', 'Agent Versatility', 'Agent Usage Rank', 'License Status'];
+  filters.forEach(function(f) {
+    html += '<div class="filter-section"><label class="filter-label">' + f + '</label>';
+    html += '<select class="filter-select"><option>All</option></select></div>';
+  });
+  html += '</aside></div>';
+
+  return html;
+}
+
+// ─────────────────────────────────────────────────────────────
+// M365 COPILOT LEADERBOARD
+// ─────────────────────────────────────────────────────────────
+function renderM365Leaderboard() {
+  var orgData = [
+    { org: 'IT',         users: 218, sessions: 4282,  wsu: 2.8 },
+    { org: 'Legal',      users: 218, sessions: 4308,  wsu: 2.7 },
+    { org: 'Marketing',  users: 213, sessions: 3700,  wsu: 2.8 },
+    { org: 'HR',         users: 209, sessions: 4011,  wsu: 2.8 },
+    { org: 'Operations', users: 199, sessions: 5554,  wsu: 4.3 },
+    { org: 'Finance',    users: 194, sessions: 5214,  wsu: 3.5 },
+    { org: 'Sales',      users: 184, sessions: 4004,  wsu: 3.0 },
+    { org: 'Support',    users: 181, sessions: 3178,  wsu: 2.6 }
+  ];
+  var rankData = [
+    { rank: 'Total',           sessions: 34244, wsu: 3.1,  isTotal: true },
+    { rank: '5. Top 10%',      sessions: 16164, wsu: 11.5, isTotal: false },
+    { rank: '4. 75\u201390%',  sessions: 8137,  wsu: 4.1,  isTotal: false },
+    { rank: '3. 50\u201375%',  sessions: 6325,  wsu: 2.4,  isTotal: false },
+    { rank: '2. 25\u201350%',  sessions: 2780,  wsu: 1.6,  isTotal: false },
+    { rank: '1. Bottom 25%',   sessions: 842,   wsu: 1.1,  isTotal: false }
+  ];
+
+  var maxOrgSess = Math.max.apply(null, orgData.map(function(r){return r.sessions}));
+  var maxOrgWsu  = Math.max.apply(null, orgData.map(function(r){return r.wsu}));
+  var maxRkSess  = Math.max.apply(null, rankData.filter(function(r){return !r.isTotal}).map(function(r){return r.sessions}));
+  var maxRkWsu   = Math.max.apply(null, rankData.filter(function(r){return !r.isTotal}).map(function(r){return r.wsu}));
+
+  var html = '<div class="dataset-layout">';
+  html += '<main class="dataset-main">';
+  html += renderM365CopilotSubTabs();
+  html += renderM365CopilotKPIRow();
+
+  // Tables row
+  html += '<div class="lb-tables-row">';
+
+  // Left: Org leaderboard
+  html += '<div class="lb-table-card">';
+  html += '<div class="chart-title">M365 Copilot Usage Leaderboard</div>';
+  html += '<div class="hm-table-wrap"><table class="hm-table">';
+  html += '<thead><tr><th>Organization</th><th class="num">Users <span class="m365-sort">&#9660;</span></th><th class="num">Total Sessions</th><th class="num">Weekly Sessions Per User</th></tr></thead><tbody>';
+  orgData.forEach(function(r) {
+    html += '<tr>';
+    html += '<td><span class="expand-icon">&#8862;</span>' + r.org + '</td>';
+    html += '<td class="num">' + r.users + '</td>';
+    html += '<td class="hm" style="' + hmBg(r.sessions, maxOrgSess, 208) + '">' + fmtNum(r.sessions) + '</td>';
+    html += '<td class="hm" style="' + hmBg(r.wsu, maxOrgWsu, 208) + '">' + r.wsu.toFixed(1) + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div></div>';
+
+  // Right: Usage by User Rank
+  html += '<div class="lb-table-card">';
+  html += '<div class="chart-title">M365 Copilot Usage by User Rank</div>';
+  html += '<div class="hm-table-wrap"><table class="hm-table">';
+  html += '<thead><tr><th>Usage Rank <span class="m365-sort">&#9660;</span></th><th class="num">Total Sessions</th><th class="num">Weekly Sessions Per User</th></tr></thead><tbody>';
+  rankData.forEach(function(r) {
+    var cls = r.isTotal ? ' class="m365-total-row"' : '';
+    var sessStyle = r.isTotal ? '' : hmBg(r.sessions, maxRkSess, 208);
+    var wsuStyle  = r.isTotal ? '' : hmBg(r.wsu, maxRkWsu, 208);
+    var label = r.rank;
+    if (!r.isTotal && label.indexOf('Users') === -1) label += ' Users';
+    html += '<tr' + cls + '>';
+    html += '<td>' + (r.isTotal ? label : ('<span class="expand-icon">&#8862;</span>' + label)) + '</td>';
+    html += '<td class="hm" style="' + sessStyle + '">' + fmtNum(r.sessions) + '</td>';
+    html += '<td class="hm" style="' + wsuStyle + '">' + r.wsu.toFixed(1) + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div></div>';
+  html += '</div>'; // lb-tables-row
+
+  html += '</main>';
+  html += renderM365CopilotFilterPanel();
+  html += '</div>';
+  return html;
+}
+
+// ─────────────────────────────────────────────────────────────
+// M365 COPILOT — Shared helpers
+// ─────────────────────────────────────────────────────────────
+function renderM365CopilotSubTabs() {
+  var ds = DATASETS['m365-copilot'];
+  var html = '<div class="sub-tabs">';
+  for (var i = 0; i < ds.views.length; i++) {
+    var cls = 'sub-tab' + (STATE.subView === i ? ' active' : '');
+    html += '<button class="' + cls + '" onclick="navigate(\'m365-copilot\',' + i + ')">' + ds.views[i] + '</button>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderM365CopilotFilterPanel() {
+  var html = '<aside class="filter-panel">';
+  html += '<div class="filter-header">Filters</div>';
+  html += '<div class="filter-section">';
+  html += '<label class="filter-label">Date</label>';
+  html += '<div class="m365-date-wrap"><input class="filter-date m365-date-input" type="date" value="2025-03-01" /></div>';
+  html += '<div class="m365-date-wrap" style="margin-top:0.25rem"><input class="filter-date m365-date-input" type="date" value="2025-06-06" /></div>';
+  html += '</div>';
+  html += '<div class="filter-section"><label class="filter-label">Organization</label><select class="filter-select"><option>All</option></select></div>';
+  html += '<div class="filter-section"><label class="filter-label">M365 Copilot Usage Ra...</label><select class="filter-select"><option>All</option></select></div>';
+  html += '</aside>';
+  return html;
+}
+
+function renderM365CopilotKPIRow() {
+  var html = '<div class="ds-kpi-row" style="grid-template-columns:1fr 1fr 1fr 1fr;margin-bottom:0.75rem">';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">1,616</div><div class="ds-kpi-label">Active Users</div></div>';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">34K</div><div class="ds-kpi-label">Total Sessions (excl. Agents)</div></div>';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">3.1</div><div class="ds-kpi-label">Sessions (Weekly - Per User)</div></div>';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">1.77</div><div class="ds-kpi-label">Active Days (Weekly - Per User)</div></div>';
+  html += '</div>';
+  return html;
+}
+
+// ─────────────────────────────────────────────────────────────
+// M365 COPILOT — Habit Formation (page 3)
+// ─────────────────────────────────────────────────────────────
+function renderM365HabitFormation() {
+  var activityData = [
+    { org: 'Operations', users: 199, apu: 85 },
+    { org: 'IT',         users: 218, apu: 80 },
+    { org: 'HR',         users: 209, apu: 76 },
+    { org: 'Finance',    users: 194, apu: 74 },
+    { org: 'Legal',      users: 219, apu: 73 },
+    { org: 'Sales',      users: 184, apu: 70 },
+    { org: 'Support',    users: 181, apu: 65 },
+    { org: 'Marketing',  users: 214, apu: 50 }
+  ];
+  var cats = {
+    infrequent: { label: '1-5 Active Days', count: 698, pct: 59 },
+    moderate:   { label: '6-10 Active Days', count: 237, pct: 20 },
+    frequent:   { label: '11-19 Active Days', count: 222, pct: 19 },
+    daily:      { label: '20+ Active Days', count: 15, pct: 1 }
+  };
+
+  var html = '<div class="dataset-layout">';
+  html += '<main class="dataset-main">';
+  html += renderM365CopilotSubTabs();
+
+  // Top row: activity table + 4 category cards + donut
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1.2fr;gap:0.6rem;margin-bottom:0.75rem;align-items:stretch">';
+
+  // Left: User Activity table with horizontal bars
+  var maxApu = 85;
+  html += '<div class="chart-card" style="padding:0.5rem;overflow:auto">';
+  html += '<div class="chart-title" style="font-size:0.8rem;margin-bottom:0.3rem">M365 Copilot User Activity</div>';
+  html += '<table class="hm-table" style="font-size:0.72rem">';
+  html += '<thead><tr><th style="text-align:left">Organization</th><th class="num">Users</th><th class="num">M365 Copilot Actions Per User</th></tr></thead><tbody>';
+  activityData.forEach(function(r) {
+    var barW = Math.round((r.apu / maxApu) * 100);
+    html += '<tr>';
+    html += '<td>' + r.org + '</td>';
+    html += '<td class="num">' + r.users + '</td>';
+    html += '<td style="padding:0.15rem 0.25rem;min-width:100px">';
+    html += '<div style="display:flex;align-items:center;gap:0.25rem">';
+    html += '<div style="background:#1976D2;height:14px;width:' + barW + '%;border-radius:1px;min-width:2px"></div>';
+    html += '<span style="font-size:0.72rem;font-weight:600;color:#333;white-space:nowrap">' + r.apu + '</span>';
+    html += '</div></td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+
+  // 4 category cards: Infrequent, Moderate, Frequent, Daily (blue shades)
+  var catOrder = [
+    { key: 'infrequent', title: 'Infrequent', bg: '#E3F2FD', color: '#0D47A1' },
+    { key: 'moderate',   title: 'Moderate',   bg: '#90CAF9', color: '#0D47A1' },
+    { key: 'frequent',   title: 'Frequent',   bg: '#1976D2', color: '#fff' },
+    { key: 'daily',      title: 'Daily',      bg: '#0D47A1', color: '#fff' }
+  ];
+  catOrder.forEach(function(c) {
+    var cat = cats[c.key];
+    var countLabel = cat.count >= 1000 ? Math.round(cat.count / 1000) + 'K' : cat.count;
+    html += '<div class="chart-card" style="padding:0.75rem;background:' + c.bg + ';color:' + c.color + ';display:flex;flex-direction:column;justify-content:space-between;min-height:140px">';
+    html += '<div>';
+    html += '<div style="font-weight:700;font-size:0.85rem;margin-bottom:0.15rem">' + c.title + '</div>';
+    html += '<div style="font-size:0.7rem;opacity:0.8">' + cat.label + ',<br>Last Month</div>';
+    html += '</div>';
+    html += '<div>';
+    html += '<div style="font-size:1.8rem;font-weight:700;line-height:1.1">' + countLabel + '</div>';
+    html += '<div style="font-size:0.75rem;opacity:0.85">Users</div>';
+    html += '</div>';
+    html += '<div>';
+    html += '<div style="font-size:1.5rem;font-weight:700;line-height:1.1">' + cat.pct + '%</div>';
+    html += '<div style="font-size:0.7rem;opacity:0.85">Of Users</div>';
+    html += '</div>';
+    html += '</div>';
+  });
+
+  // Right: Donut chart
+  html += '<div class="chart-card" style="padding:0.5rem">';
+  html += '<div class="chart-title" style="font-size:0.8rem;margin-bottom:0.2rem">% of Users by Habitual Usage</div>';
+  html += '<div style="font-size:0.7rem;color:var(--text-light);margin-bottom:0.25rem">Last Month</div>';
+  html += '<div class="chart-wrap" style="height:160px"><canvas id="chart-m365-habit-donut"></canvas></div>';
+  html += '</div>';
+
+  html += '</div>'; // top grid
+
+  // Bottom: Stacked bar chart — Active Days
+  html += '<div class="chart-card">';
+  html += '<div class="chart-title">M365 Copilot Chat Active Days</div>';
+  html += '<div class="chart-legend-inline">';
+  html += '<span><span class="dot" style="background:#C0C0C0"></span> 1-5 Active Days</span>';
+  html += '<span><span class="dot" style="background:#42A5F5"></span> 6-10 Active Days</span>';
+  html += '<span><span class="dot" style="background:#1976D2"></span> 11-19 Active Days</span>';
+  html += '<span><span class="dot" style="background:#0D47A1"></span> 20+ Active Days</span>';
+  html += '</div>';
+  html += '<div class="chart-wrap" style="height:240px"><canvas id="chart-m365-active-days"></canvas></div>';
+  html += '</div>';
+
+  html += '</main>';
+  html += renderM365CopilotFilterPanel();
+  html += '</div>';
+  return html;
+}
+
+function initM365HabitFormationCharts() {
+  destroyCharts();
+
+  // ── Donut: % of Users by Habitual Usage ──
+  var ctx1 = document.getElementById('chart-m365-habit-donut');
+  if (ctx1) {
+    ACTIVE_CHARTS.push(new Chart(ctx1, {
+      type: 'doughnut',
+      data: {
+        labels: ['Infrequent 60%','Mod... 20%','Frequent 19%','Daily 1%'],
+        datasets: [{
+          data: [60, 20, 19, 1],
+          backgroundColor: ['#C0C0C0','#42A5F5','#1976D2','#0D47A1'],
+          borderWidth: 2, borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        cutout: '58%',
+        plugins: {
+          legend: { display: false },
+          datalabels: {
+            color: function(ctx) { return ctx.dataIndex === 0 ? '#333' : (ctx.dataIndex === 1 ? '#333' : '#fff'); },
+            font: { size: 9, weight: '600' },
+            formatter: function(v, ctx) {
+              var short = ['Infrequent','Mod...','Frequent','Daily'];
+              return short[ctx.dataIndex] + ' ' + v + '%';
+            },
+            anchor: 'end', align: 'end', offset: 4
+          }
+        }
+      },
+      plugins: [ChartDataLabels]
+    }));
+  }
+
+  // ── Stacked Bar: M365 Copilot Active Days ──
+  var ctx2 = document.getElementById('chart-m365-active-days');
+  if (ctx2) {
+    ACTIVE_CHARTS.push(new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: ['Mar 2025','Apr 2025','May 2025','Jun 2025'],
+        datasets: [
+          { label: '1-5 Active Days',   data: [612, 621, 698, 771], backgroundColor: '#C0C0C0', datalabels: { display: true, color: '#333', font: { size: 10, weight: '600' }, anchor: 'center' } },
+          { label: '6-10 Active Days',  data: [142, 189, 237, 0], backgroundColor: '#42A5F5', datalabels: { display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 0; }, color: '#fff', font: { size: 10, weight: '600' }, anchor: 'center' } },
+          { label: '11-19 Active Days', data: [96, 142, 222, 0], backgroundColor: '#1976D2', datalabels: { display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 0; }, color: '#fff', font: { size: 10, weight: '600' }, anchor: 'center' } },
+          { label: '20+ Active Days',   data: [0, 0, 0, 0], backgroundColor: '#0D47A1', datalabels: { display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 0; }, color: '#fff', font: { size: 10, weight: '600' }, anchor: 'center' } }
+        ]
+      },
+      plugins: [ChartDataLabels],
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { stacked: true, grid: { display: false }, ticks: { font: { size: 10 } } },
+          y: { stacked: true, grid: { color: '#F0F0F0' }, ticks: { font: { size: 10 } }, beginAtZero: true }
+        }
+      }
+    }));
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// AGENTS — Shared Filter Panel
+// ─────────────────────────────────────────────────────────────
+function renderAgentsFilterPanel() {
+  var html = '<aside class="filter-panel">';
+  html += '<div class="filter-header">Filters</div>';
+  html += '<div class="filter-section">';
+  html += '<label class="filter-label">Date</label>';
+  html += '<div class="m365-date-wrap"><input class="filter-date m365-date-input" type="date" value="2025-03-01" /></div>';
+  html += '<div class="m365-date-wrap" style="margin-top:0.25rem"><input class="filter-date m365-date-input" type="date" value="2025-06-06" /></div>';
+  html += '</div>';
+  var filters = ['Organization', 'Agent Review', 'Agent Name', 'Agent Creator', 'Agent Type', 'Last Activity Date', 'Agent Versatility', 'Agent Usage Rank', 'License Status'];
+  filters.forEach(function(f) {
+    html += '<div class="filter-section"><label class="filter-label">' + f + '</label>';
+    html += '<select class="filter-select"><option>All</option></select></div>';
+  });
+  html += '</aside>';
+  return html;
+}
+
+// ─────────────────────────────────────────────────────────────
+// AGENTS — Sub-tab Row Helper
+// ─────────────────────────────────────────────────────────────
+function renderAgentsSubTabs() {
+  var ds = DATASETS['agents'];
+  var html = '<div class="sub-tabs">';
+  for (var i = 0; i < ds.views.length; i++) {
+    var cls = 'sub-tab' + (STATE.subView === i ? ' active' : '');
+    html += '<button class="' + cls + '" onclick="navigate(\'agents\',' + i + ')">' + ds.views[i] + '</button>';
+  }
+  html += '</div>';
+  return html;
+}
+
+// ─────────────────────────────────────────────────────────────
+// AGENTS HEALTH CHECK
+// ─────────────────────────────────────────────────────────────
+function renderAgentsHealthCheck() {
+  var healthData = [
+    { name: 'IT Service Agent',              users: 9,  activity: '1. Active (Last 7 days)',   review: 'Keep',   type: 'EntraAgent', features: '\ud83d\udcac in Teams \ud83d\udce7 in Outlook \u21B3 in Office', creator: '5c8ns1bvqkwxjk33@contoso.com', created: '4/25/2025 5:33:29 PM', desc: 'Manages IT service requests and ticket routing' },
+    { name: 'Secure Message Assistant',      users: 7,  activity: '1. Active (Last 7 days)',   review: 'Keep',   type: 'EntraAgent', features: '\ud83d\udcac in Teams \ud83d\udce7 in Outlook \u21B3 in Office', creator: 'hme2oyuj55n5joji@contoso.com', created: '4/2/2025 12:33:25 PM', desc: 'Production version of secure messaging assistant' },
+    { name: 'BAU Complaint Agent Checker',   users: 5,  activity: '2. Recent (Last 30 days)',  review: 'Keep',   type: 'EntraAgent', features: '\ud83d\udcac in Teams \u21B3 in Office',                          creator: 'pkxaeha78riltp0b@contoso.com', created: '5/7/2025 4:07:21 PM', desc: 'Checks and validates BAU complaints for completeness' },
+    { name: 'CRU QA Analyzer Agent',         users: 4,  activity: '1. Active (Last 7 days)',   review: 'Keep',   type: 'EntraAgent', features: '\ud83d\udcac in Teams \u21B3 in Office',                          creator: 'j3xd06gs0m1ip8d90@contoso.com', created: '4/18/2025 1:39:18 PM', desc: 'Analyzes QA reports and identifies compliance issues' },
+    { name: 'Risk and Compliance Policy',    users: 4,  activity: '2. Recent (Last 30 days)',  review: 'Keep',   type: 'EntraAgent', features: '\ud83d\udcac in Teams \ud83d\udce7 in Outlook \u21B3 in Office', creator: 'z41rtv9ulraxw8sy@contoso.com', created: '5/10/2025 10:41:58 AM', desc: 'Provides risk and compliance policy guidance' },
+    { name: 'CEO FRL Generator',             users: 3,  activity: '1. Active (Last 7 days)',   review: 'Keep',   type: 'EntraAgent', features: '\ud83d\udcac in Teams',                                            creator: '35tml0ttinynmpu@contoso.com', created: '3/18/2025 10:47:33 AM', desc: 'Generates FRL reports and documents for executives' },
+    { name: 'OpRisk Guidance/Standards Bot', users: 3,  activity: '2. Recent (Last 30 days)',  review: 'Keep',   type: 'EntraAgent', features: '\ud83d\udcac in Teams \u21B3 in Office',                          creator: 'eiugd4kpog3ru8as@contoso.com', created: '6/3/2025 3:48:39 PM', desc: 'Provides operational risk guidance and standards' },
+    { name: 'RisKEY (M365)',                 users: 3,  activity: '2. Recent (Last 30 days)',  review: 'Keep',   type: 'EntraAgent', features: '\ud83d\udcac in Teams \ud83d\udce7 in Outlook \u21B3 in Office', creator: 'voon8co2i6dppitc@contoso.com', created: '5/25/2025 11:44:55 AM', desc: 'Risk management and key indicator tracking tool' }
+  ];
+
+  var html = '<div class="dataset-layout">';
+  html += '<main class="dataset-main">';
+  html += renderAgentsSubTabs();
+
+  // KPI Row: 6 cards
+  html += '<div class="ds-kpi-row" style="grid-template-columns:repeat(6,1fr)">';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">27</div><div class="ds-kpi-label">Total Agents</div></div>';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">169</div><div class="ds-kpi-label">Active Agents</div></div>';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">1</div><div class="ds-kpi-label">New Agents</div></div>';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">20</div><div class="ds-kpi-label">Agents to Keep</div></div>';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">6</div><div class="ds-kpi-label">Agents to Review</div></div>';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">0</div><div class="ds-kpi-label">Agents to Retire</div></div>';
+  html += '</div>';
+
+  // Table: full-width agent health table
+  html += '<div class="lb-table-card" style="margin-top:0.5rem">';
+  html += '<div class="hm-table-wrap"><table class="hm-table" style="width:100%">';
+
+  // Header
+  html += '<thead><tr>';
+  html += '<th>All Agents</th><th class="num">Users &#9660;</th><th>Last Activity</th>';
+  html += '<th>Agent Review</th><th>Agent Type</th><th>Features</th>';
+  html += '<th>Creator</th><th>Creation Date</th><th>Agent Description</th>';
+  html += '</tr></thead>';
+
+  // Total row
+  html += '<tbody>';
+  html += '<tr class="total-row"><td></td><td class="hm num" style="' + hmBg(167, 167, 265) + '">167</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
+
+  // Data rows
+  healthData.forEach(function(r) {
+    var reviewBadge = '';
+    if (r.review === 'Keep') reviewBadge = '<span style="color:#107C10;font-weight:600">\u2705 Keep</span>';
+    else if (r.review === 'Review') reviewBadge = '<span style="color:#D83B01;font-weight:600">\u26A0\uFE0F Review</span>';
+    else if (r.review === 'Retire') reviewBadge = '<span style="color:#C42B1C;font-weight:600">\u274C Retire</span>';
+    else if (r.review === 'New') reviewBadge = '<span style="color:#0078D4;font-weight:600">\ud83c\udd95 New</span>';
+
+    var actColor = r.activity.indexOf('Active') > -1 ? '#107C10' : '#605E5C';
+
+    html += '<tr>';
+    html += '<td style="font-weight:600">' + r.name + '</td>';
+    html += '<td class="hm num" style="' + hmBg(r.users, 9, 265) + '">' + r.users + '</td>';
+    html += '<td style="color:' + actColor + ';font-size:0.78rem">' + r.activity + '</td>';
+    html += '<td>' + reviewBadge + '</td>';
+    html += '<td>' + r.type + '</td>';
+    html += '<td style="font-size:0.72rem;white-space:normal;max-width:160px">' + r.features + '</td>';
+    html += '<td style="font-size:0.72rem;white-space:normal;min-width:160px">' + r.creator + '</td>';
+    html += '<td style="font-size:0.72rem">' + r.created + '</td>';
+    html += '<td style="font-size:0.72rem;white-space:normal;max-width:200px;color:var(--text-secondary)">' + r.desc + '</td>';
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div></div>';
+
+  // Legend
+  html += '<div class="lb-legend" style="margin-top:0.75rem">';
+  html += '<h4 style="margin:0 0 0.35rem 0"><strong>Agent Review</strong> <span style="font-weight:400;color:var(--text-secondary)">(Legend)</span></h4>';
+  html += '<div style="font-size:0.78rem;line-height:1.8;color:var(--text-secondary)">';
+  html += '<div>\ud83c\udd95 <strong>New</strong> = Created within the last 30 days and not yet used. Give them time to gain adoption.</div>';
+  html += '<div>\u2705 <strong>Keep</strong> = Active within 30 days or has strong user engagement. Continue supporting these agents.</div>';
+  html += '<div>\u26A0\uFE0F <strong>Review</strong> = Inactive for 30+ days with low usage, or created 30\u201390 days ago but never adopted. Monitor closely.</div>';
+  html += '<div>\u274C <strong>Retire</strong> = Inactive for 90+ days with minimal users, or created 90+ days ago but never used. Consider removal.</div>';
+  html += '</div></div>';
+
+  html += '</main>';
+  html += renderAgentsFilterPanel();
+  html += '</div>';
+  return html;
+}
+
+// ─────────────────────────────────────────────────────────────
+// AGENTS USE CASES
+// ─────────────────────────────────────────────────────────────
+function renderAgentsUseCases() {
+  var html = '<div class="dataset-layout">';
+  html += '<main class="dataset-main">';
+  html += renderAgentsSubTabs();
+
+  // Two-column layout: treemap left, AI analysis right
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;flex:1;min-height:0">';
+
+  // Left: Treemap card
+  html += '<div class="chart-card" style="overflow:auto">';
+  html += '<div class="chart-title">Total Number of Sessions by Agent</div>';
+  html += '<div class="chart-subtitle">Minimum of 3 users</div>';
+  html += '<div id="usecase-treemap" class="treemap-container" style="min-height:400px"></div>';
+  html += '</div>';
+
+  // Right: AI analysis card
+  html += '<div class="chart-card" style="overflow-y:auto">';
+  html += '<h3 style="font-size:1.05rem;font-weight:600;margin-bottom:0.75rem">What are the top agents doing?</h3>';
+
+  html += '<p style="font-size:0.85rem;line-height:1.65;margin-bottom:0.85rem">';
+  html += 'The available agents focus on various core business functions\u2014automation, analytics, compliance, and support. ';
+  html += 'Agents such as the <strong>IT Service Agent</strong> and <strong>Support-related agents</strong> ';
+  html += '(e.g., BAU Complaint Agent Checker) likely automate troubleshooting and ticket management, ';
+  html += 'streamlining internal processes <sup>1</sup>. Others, like the <strong>CRU QA Analyzer Agent</strong> ';
+  html += 'and <strong>Risk and Compliance Policy</strong>, suggest uses in data analysis and ensuring ';
+  html += 'adherence to regulatory standards, which supports risk mitigation <sup>1</sup>.</p>';
+
+  html += '<p style="font-size:0.85rem;line-height:1.65;margin-bottom:0.85rem">';
+  html += 'Common themes include <strong>operational efficiency</strong> (IT Service Agent: 138 sessions, BAU Complaint Agent Checker: 40 sessions), ';
+  html += '<strong>regulatory compliance</strong> (Risk and Compliance Policy: 23 sessions), and <strong>enhanced communication/security</strong> ';
+  html += '(Secure Message Assistant: 157 sessions) <sup>1</sup>. The presence of agents tailored to specific business lines ';
+  html += '(e.g., Analyst, Marketing Demo, and Researcher agents) indicates use cases in analytics, reporting, and information retrieval across departments.</p>';
+
+  html += '<h3 style="font-size:1.0rem;font-weight:600;margin:1rem 0 0.5rem">Estimated Value to Business</h3>';
+  html += '<p style="font-size:0.85rem;line-height:1.65;margin-bottom:0.85rem">';
+  html += 'The high session counts (e.g., <strong>Visual Creator</strong>: 297, Secure Message Assistant: 157) ';
+  html += 'demonstrate strong adoption, implying significant time savings and productivity improvements. ';
+  html += 'By automating routine tasks, these agents likely reduce manual workload, decrease error rates, ';
+  html += 'and enable employees to focus on higher-value work. The <strong>deployment across multiple business areas</strong> ';
+  html += '(Operations: 422 sessions, Sales: 375) suggests wide organizational value, supporting collaboration ';
+  html += 'and driving decision-making <sup>2</sup>.</p>';
+
+  html += '<h3 style="font-size:1.0rem;font-weight:600;margin:1rem 0 0.5rem">Likely Leadership Questions and Answers</h3>';
+  html += '<ol style="font-size:0.85rem;line-height:1.7;padding-left:1.25rem;margin-bottom:0.85rem">';
+  html += '<li><strong>Which departments are benefiting most from agent adoption?</strong>';
+  html += '<ol style="padding-left:1.25rem"><li><strong>Operations</strong> (422 sessions) and <strong>Sales</strong> (375) have the highest agent activity, indicating the greatest usage and likely benefit <sup>2</sup>.</li></ol></li>';
+  html += '<li><strong>What specific problems are agents solving?</strong>';
+  html += '<ol style="padding-left:1.25rem"><li><strong>IT and Support agents</strong> are likely addressing helpdesk and troubleshooting needs; ';
+  html += '<strong>Risk/compliance agents</strong> ensure regulatory processes; <strong>Analysts</strong> drive data usage for business decisions <sup>1</sup>.</li></ol></li>';
+  html += '<li><strong>Is agent usage efficient relative to the number of users?</strong>';
+  html += '<ol style="padding-left:1.25rem"><li>Agents like <strong>Secure Message Assistant</strong> (22.4 sessions/user) and <strong>IT Service Agent</strong> (15.3 sessions/user) show high per-user engagement, suggesting efficient, repeat usage <sup>2</sup>.</li></ol></li>';
+  html += '</ol>';
+
+  html += '<div style="font-size:0.75rem;color:var(--text-light);border-top:1px solid var(--border);padding-top:0.5rem;margin-top:0.5rem">';
+  html += 'Created with AI. Inaccuracies are possible. <a href="#" style="color:var(--purple-600)">Read terms</a>';
+  html += '</div>';
+
+  html += '</div>';
+  html += '</div>'; // grid
+
+  html += '</main>';
+  html += renderAgentsFilterPanel();
+  html += '</div>';
+  return html;
+}
+
+function initAgentsUseCasesTreemap() {
+  var container = document.getElementById('usecase-treemap');
+  if (!container) return;
+
+  var sorted = AGENTS_DATA.agents.slice().sort(function(a, b) { return b.value - a.value; });
+  var layout = computeTreemap(sorted, 0, 0, 100, 100);
+  var purpleScale = [
+    '#1B0D3F','#2D1566','#3B1A6E','#4B2D8E','#5C3D99',
+    '#6B4FA2','#7B63B3','#8B78C2','#9B8DD1','#A99BD8',
+    '#B7AAE0','#C5B9E7','#D3C8EE','#E0D6F4','#EDE4FA'
+  ];
+
+  container.innerHTML = '';
+  for (var i = 0; i < layout.length; i++) {
+    var item = layout[i];
+    var div = document.createElement('div');
+    div.className = 'treemap-cell';
+    div.style.left = item.x + '%';
+    div.style.top = item.y + '%';
+    div.style.width = item.w + '%';
+    div.style.height = item.h + '%';
+    div.style.backgroundColor = purpleScale[i % purpleScale.length];
+    div.title = item.name + ': ' + item.value + ' sessions';
+
+    var area = item.w * item.h;
+    if (area > 80) {
+      div.innerHTML = '<span class="treemap-cell-label">' + item.name + '</span><span class="treemap-cell-value">' + item.value + '</span>';
+    } else if (area > 30) {
+      var short = item.name.length > 18 ? item.name.slice(0, 16) + '...' : item.name;
+      div.innerHTML = '<span class="treemap-cell-label">' + short + '</span><span class="treemap-cell-value">' + item.value + '</span>';
+    } else if (area > 10) {
+      div.innerHTML = '<span class="treemap-cell-value">' + item.value + '</span>';
+    }
+    container.appendChild(div);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COPILOT CHAT (UNLICENSED) — DATA & RENDERERS
+// ═══════════════════════════════════════════════════════════════
+
+var COPILOT_CHAT_DATA = {
+  kpis: { activeUsers: 2585, sessionsPerUser: 3.3, activeDaysPerUser: 1.8 },
+  trend: {
+    labels: ['Feb 2025','Mar 2025','','Apr 2025','','May 2025','','Jun 2025'],
+    activeUsers: [0, 200, 500, 750, 800, 900, 1050, 1100],
+    totalSessions: [0, 3700, 3900, 3200, 4500, 4200, 7000, 7500],
+    totalSessionsLabels: ['0.0K','3.7K','3.9K','3.2K','4.5K','4.2K','7.0K','7.5K']
+  },
+  sessionsPerUserByDept: [
+    { dept: 'Finance', value: 5.5 }, { dept: 'Legal', value: 3.3 },
+    { dept: 'Support', value: 3.1 }, { dept: 'HR', value: 3.0 },
+    { dept: 'Sales', value: 3.0 }, { dept: 'IT', value: 3.0 },
+    { dept: 'Operations', value: 2.9 }, { dept: 'Marketing', value: 2.8 },
+    { dept: '(Blank)', value: 2.4 }
+  ],
+  sessionsByRank: {
+    labels: ['5. Top 10% Users','4. 75\u201390% Users','3. 50\u201375% Users','2. 25\u201350% Users','1. Bottom 25% Users'],
+    data: [1, 2, 12, 4, 3],
+    colors: ['#4B2D8E','#D175B7','#E8A4D0','#808080','#C0C0C0']
+  },
+  treemapApps: [
+    { name: 'Teams', value: 1988 }, { name: 'Office', value: 1024 },
+    { name: 'Word', value: 534 }, { name: 'Designer', value: 379 },
+    { name: 'Outlook', value: 660 }, { name: 'PowerPoint', value: 273 },
+    { name: 'Stream', value: 101 }, { name: 'Excel', value: 188 },
+    { name: 'OneNote', value: 82 }, { name: 'Copilot Studio', value: 53 },
+    { name: 'SharePoint', value: 58 }
+  ],
+  orgLeaderboard: [
+    { org: 'Finance',    users: 276, sessions: 9550, wsu: 5.5 },
+    { org: 'Support',    users: 317, sessions: 7596, wsu: 3.1 },
+    { org: 'Operations', users: 325, sessions: 7538, wsu: 2.9 },
+    { org: 'Legal',      users: 314, sessions: 7430, wsu: 3.3 },
+    { org: 'HR',         users: 324, sessions: 6815, wsu: 3.0 },
+    { org: 'IT',         users: 291, sessions: 6653, wsu: 3.0 },
+    { org: 'Sales',      users: 302, sessions: 6460, wsu: 3.0 },
+    { org: 'Marketing',  users: 310, sessions: 5730, wsu: 2.8 },
+    { org: '',           users: 126, sessions: 2074, wsu: 2.4 }
+  ],
+  surfaceLeaderboard: [
+    { surface: 'Logic App',           users: 1,   sessions: 219,  wsu: 109.5 },
+    { surface: 'PowerBI',             users: 1,   sessions: 3,    wsu: 1.5 },
+    { surface: 'Planner',             users: 2,   sessions: 5,    wsu: 1.3 },
+    { surface: 'M365AdminCenter',     users: 3,   sessions: 3,    wsu: 1.0 },
+    { surface: 'Whiteboard',          users: 3,   sessions: 3,    wsu: 1.0 },
+    { surface: 'Bing',                users: 4,   sessions: 11,   wsu: 2.8 },
+    { surface: 'Copilot in Defender', users: 4,   sessions: 27,   wsu: 6.8 },
+    { surface: 'Loop',                users: 7,   sessions: 7,    wsu: 1.0 },
+    { surface: 'Microsoft Teams',     users: 15,  sessions: 21,   wsu: 0.8 },
+    { surface: 'Unknown',             users: 16,  sessions: 4155, wsu: 53.9 },
+    { surface: 'Copilot Studio',      users: 53,  sessions: 1047, wsu: 4.5 },
+    { surface: 'SharePoint',          users: 58,  sessions: 131,  wsu: 1.5 },
+    { surface: 'OneNote',             users: 64,  sessions: 149,  wsu: 1.4 },
+    { surface: 'Edge',                users: 78,  sessions: 169,  wsu: 1.3 },
+    { surface: 'Forms',               users: 82,  sessions: 240,  wsu: 1.2 },
+    { surface: 'Stream',              users: 101, sessions: 270,  wsu: 1.3 }
+  ],
+  habitualActivity: [
+    { org: 'Finance',    users: 276, wsu: 5.5 },
+    { org: 'Legal',      users: 314, wsu: 3.3 },
+    { org: 'Support',    users: 318, wsu: 3.1 },
+    { org: 'HR',         users: 325, wsu: 3.0 },
+    { org: 'Sales',      users: 303, wsu: 3.0 },
+    { org: 'IT',         users: 292, wsu: 3.0 },
+    { org: 'Operations', users: 325, wsu: 2.9 },
+    { org: 'Marketing',  users: 310, wsu: 2.8 }
+  ],
+  habitualCategories: {
+    infrequent: { label: '1-5 Active Days', count: 1000, pct: 58 },
+    moderate:   { label: '6-10 Active Days', count: 396,  pct: 21 },
+    frequent:   { label: '11-19 Active Days', count: 352, pct: 18 },
+    daily:      { label: '20+ Active Days', count: 32,   pct: 2 }
+  },
+  habitualDonut: {
+    labels: ['Infrequent 59%','Mod... 21%','Frequent 19%','Daily 2%'],
+    data: [59, 21, 19, 2],
+    colors: ['#C0C0C0','#D175B7','#9B59B6','#4B2D8E']
+  },
+  habitualActiveDays: {
+    months: ['Mar 2025','Apr 2025','May 2025','Jun 2025'],
+    tier1: [995, 987, 1111, 1194],
+    tier2: [208, 311, 396, 0],
+    tier3: [172, 262, 352, 0],
+    tier4: [0, 0, 0, 0]
+  },
+  licensePriority: [
+    { org: '',           rank: 54,  wsu: 2.4, wadu: 1.6 },
+    { org: 'Finance',    rank: 119, wsu: 5.5, wadu: 1.9 },
+    { org: 'Marketing',  rank: 129, wsu: 2.8, wadu: 1.8 },
+    { org: 'Sales',      rank: 129, wsu: 3.0, wadu: 1.8 },
+    { org: 'HR',         rank: 130, wsu: 3.0, wadu: 1.8 },
+    { org: 'IT',         rank: 131, wsu: 3.0, wadu: 1.9 },
+    { org: 'Operations', rank: 138, wsu: 2.9, wadu: 1.8 },
+    { org: 'Support',    rank: 138, wsu: 3.1, wadu: 1.9 },
+    { org: 'Legal',      rank: 140, wsu: 3.3, wadu: 1.9 }
+  ],
+  bubbleChart: [
+    { org: 'Sales',      x: 1.45, y: 2.00, r: 12 },
+    { org: 'Marketing',  x: 1.50, y: 1.97, r: 14 },
+    { org: 'Operations', x: 1.50, y: 1.97, r: 14 },
+    { org: 'HR',         x: 1.53, y: 1.97, r: 14 },
+    { org: 'IT',         x: 1.58, y: 1.97, r: 30 },
+    { org: 'Legal',      x: 1.50, y: 1.92, r: 20 },
+    { org: 'Support',    x: 1.50, y: 1.89, r: 18 }
+  ]
+};
+
+// ─────────────────────────────────────────────────────────────
+// COPILOT CHAT — Shared helpers
+// ─────────────────────────────────────────────────────────────
+function renderCopilotChatSubTabs() {
+  var ds = DATASETS['copilot-unlicensed'];
+  var html = '<div class="sub-tabs">';
+  for (var i = 0; i < ds.views.length; i++) {
+    var cls = 'sub-tab' + (STATE.subView === i ? ' active' : '');
+    html += '<button class="' + cls + '" onclick="navigate(\'copilot-unlicensed\',' + i + ')">' + ds.views[i] + '</button>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderCopilotChatFilterPanel() {
+  var html = '<aside class="filter-panel">';
+  html += '<div class="filter-header">Filters</div>';
+  html += '<div class="filter-section">';
+  html += '<label class="filter-label">Date</label>';
+  html += '<div class="m365-date-wrap"><input class="filter-date m365-date-input" type="date" value="2025-03-01" /></div>';
+  html += '<div class="m365-date-wrap" style="margin-top:0.25rem"><input class="filter-date m365-date-input" type="date" value="2025-06-06" /></div>';
+  html += '</div>';
+  html += '<div class="filter-section"><label class="filter-label">Organization</label><select class="filter-select"><option>All</option></select></div>';
+  html += '<div class="filter-section"><label class="filter-label">Chat Usage Rank</label><select class="filter-select"><option>All</option></select></div>';
+  html += '</aside>';
+  return html;
+}
+
+function renderCopilotChatKPIRow() {
+  var k = COPILOT_CHAT_DATA.kpis;
+  var html = '<div class="ds-kpi-row" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:0.75rem">';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">' + fmtNum(k.activeUsers) + '</div><div class="ds-kpi-label">Active Users</div></div>';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">' + k.sessionsPerUser.toFixed(1) + '</div><div class="ds-kpi-label">Sessions (Weekly - Per User)</div></div>';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">' + k.activeDaysPerUser.toFixed(1) + '</div><div class="ds-kpi-label">Active Days (Weekly - Per User)</div></div>';
+  html += '</div>';
+  return html;
+}
+
+// ─────────────────────────────────────────────────────────────
+// COPILOT CHAT — Usage Trends (page 1)
+// ─────────────────────────────────────────────────────────────
+function renderCopilotChatUsageTrends() {
+  var d = COPILOT_CHAT_DATA;
+
+  var html = '<div class="dataset-layout">';
+  html += '<main class="dataset-main">';
+  html += renderCopilotChatSubTabs();
+  html += renderCopilotChatKPIRow();
+
+  // Top row: 2 charts
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem;">';
+
+  // Chart 1: Unlicensed Chat Usage Trends (dual-axis)
+  html += '<div class="chart-card">';
+  html += '<div class="chart-title">Unlicensed Chat Usage Trends</div>';
+  html += '<div class="chart-legend-inline">';
+  html += '<span><span class="dot" style="background:#A0A0A0"></span> Active Users</span>';
+  html += '<span><span class="dot" style="background:#D175B7"></span> Total Sessions</span>';
+  html += '</div>';
+  html += '<div class="chart-wrap"><canvas id="chart-cc-trend"></canvas></div>';
+  html += '</div>';
+
+  // Chart 2: Weekly Sessions Per User (horizontal bar)
+  html += '<div class="chart-card">';
+  html += '<div class="chart-title">Weekly Sessions Per User</div>';
+  html += '<div class="chart-wrap"><canvas id="chart-cc-sessions-dept"></canvas></div>';
+  html += '</div>';
+
+  html += '</div>'; // top row
+
+  // Bottom row: donut + treemap
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">';
+
+  // Chart 3: Average Weekly Sessions by User Rank (donut)
+  html += '<div class="chart-card">';
+  html += '<div class="chart-title">Average Weekly Sessions by User Rank</div>';
+  html += '<div class="chart-wrap" style="display:flex;align-items:center;justify-content:center"><canvas id="chart-cc-rank-donut"></canvas></div>';
+  html += '</div>';
+
+  // Chart 4: Unlicensed Chat Usage by Application (treemap)
+  html += '<div class="chart-card">';
+  html += '<div class="chart-title">Unlicensed Chat Usage by Application</div>';
+  html += '<div id="cc-app-treemap" class="treemap-container" style="min-height:260px;position:relative"></div>';
+  html += '</div>';
+
+  html += '</div>'; // bottom row
+
+  html += '</main>';
+  html += renderCopilotChatFilterPanel();
+  html += '</div>';
+  return html;
+}
+
+function initCopilotChatUsageTrendsCharts() {
+  destroyCharts();
+  var d = COPILOT_CHAT_DATA;
+
+  // ── Chart 1: Dual-axis usage trend ──
+  var ctx1 = document.getElementById('chart-cc-trend');
+  if (ctx1) {
+    ACTIVE_CHARTS.push(new Chart(ctx1, {
+      type: 'line',
+      data: {
+        labels: ['Feb 2025','Mar 2025','','Apr 2025','','May 2025','','Jun 2025'],
+        datasets: [{
+          label: 'Active Users',
+          data: d.trend.activeUsers,
+          borderColor: '#A0A0A0',
+          backgroundColor: 'rgba(160,160,160,0.06)',
+          pointBackgroundColor: '#A0A0A0',
+          pointRadius: 4, borderWidth: 2, tension: 0.35,
+          yAxisID: 'y', fill: true,
+          datalabels: { display: false }
+        }, {
+          label: 'Total Sessions',
+          data: d.trend.totalSessions,
+          borderColor: '#D175B7',
+          backgroundColor: 'transparent',
+          pointBackgroundColor: '#D175B7',
+          pointRadius: 5, borderWidth: 2.5, tension: 0.35,
+          yAxisID: 'y1',
+          datalabels: {
+            display: true, align: 'top', offset: 6, color: '#D175B7',
+            font: { size: 10, weight: '600' },
+            formatter: function(v) { if (v === 0) return '0.0K'; return (v/1000).toFixed(1) + 'K'; }
+          }
+        }]
+      },
+      plugins: [ChartDataLabels],
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#888', font: { size: 10 } }, grid: { color: '#F0F0F0' } },
+          y: { position: 'left', title: { display: true, text: 'Active Users', color: '#888', font: { size: 10 } }, ticks: { color: '#888', font: { size: 10 } }, grid: { color: '#F0F0F0' }, min: 0 },
+          y1: { position: 'right', title: { display: true, text: 'Total Sessions', color: '#888', font: { size: 10 } }, ticks: { color: '#888', font: { size: 10 }, callback: function(v) { return (v/1000).toFixed(0) + 'K'; } }, grid: { drawOnChartArea: false }, min: 0 }
+        }
+      }
+    }));
+  }
+
+  // ── Chart 2: Weekly Sessions Per User by Department (vertical bar) ──
+  var ctx2 = document.getElementById('chart-cc-sessions-dept');
+  if (ctx2) {
+    var pinkScale = d.sessionsPerUserByDept.map(function(_, i) {
+      var t = i / Math.max(d.sessionsPerUserByDept.length - 1, 1);
+      return 'hsl(320, ' + Math.round(55 - t * 30) + '%, ' + Math.round(40 + t * 40) + '%)';
+    });
+    ACTIVE_CHARTS.push(new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: d.sessionsPerUserByDept.map(function(x) { return x.dept; }),
+        datasets: [{
+          data: d.sessionsPerUserByDept.map(function(x) { return x.value; }),
+          backgroundColor: pinkScale,
+          borderRadius: 0, barPercentage: 0.7,
+          datalabels: {
+            display: true, anchor: 'end', align: 'top', offset: 2,
+            color: '#666', font: { size: 10, weight: '600' },
+            formatter: function(v) { return v.toFixed(1); }
+          }
+        }]
+      },
+      plugins: [ChartDataLabels],
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#888', font: { size: 9 }, maxRotation: 45, minRotation: 25 }, grid: { display: false } },
+          y: { title: { display: true, text: 'Chat Sessions Per User Per Week', color: '#888', font: { size: 10 } }, ticks: { color: '#888', font: { size: 10 } }, grid: { color: '#F0F0F0' }, beginAtZero: true, suggestedMax: 7 }
+        }
+      }
+    }));
+  }
+
+  // ── Chart 3: Average Weekly Sessions by User Rank (donut) ──
+  var ctx3 = document.getElementById('chart-cc-rank-donut');
+  if (ctx3) {
+    ACTIVE_CHARTS.push(new Chart(ctx3, {
+      type: 'doughnut',
+      data: {
+        labels: d.sessionsByRank.labels,
+        datasets: [{
+          data: d.sessionsByRank.data,
+          backgroundColor: d.sessionsByRank.colors,
+          borderWidth: 2, borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        cutout: '55%',
+        plugins: {
+          legend: { position: 'right', labels: { font: { size: 10 }, boxWidth: 12, padding: 8 } },
+          datalabels: { color: '#fff', font: { size: 11, weight: 'bold' }, formatter: function(v) { return v; } }
+        }
+      },
+      plugins: [ChartDataLabels]
+    }));
+  }
+
+  // ── Chart 4: Treemap — Usage by Application ──
+  var tmContainer = document.getElementById('cc-app-treemap');
+  if (tmContainer) {
+    var sorted = d.treemapApps.slice().sort(function(a, b) { return b.value - a.value; });
+    var layout = computeTreemap(sorted, 0, 0, 100, 100);
+    var appColors = ['#4B2D8E','#6B4FA2','#7B63B3','#D175B7','#E8A4D0',
+                     '#D4A76A','#E8C88A','#333333','#5FA87F','#7BC8A4',
+                     '#A0D4B8','#96C3D9','#6B9FBF','#9B8DD1','#B7AAE0'];
+    tmContainer.innerHTML = '';
+    for (var i = 0; i < layout.length; i++) {
+      var item = layout[i];
+      var div = document.createElement('div');
+      div.className = 'treemap-cell';
+      div.style.left = item.x + '%';
+      div.style.top = item.y + '%';
+      div.style.width = item.w + '%';
+      div.style.height = item.h + '%';
+      div.style.backgroundColor = appColors[i % appColors.length];
+      div.title = item.name + ': ' + item.value + ' sessions';
+      var area = item.w * item.h;
+      if (area > 80) {
+        div.innerHTML = '<span class="treemap-cell-label">' + item.name + '</span><span class="treemap-cell-value">' + item.value + '</span>';
+      } else if (area > 30) {
+        var short = item.name.length > 12 ? item.name.slice(0, 10) + '...' : item.name;
+        div.innerHTML = '<span class="treemap-cell-label">' + short + '</span><span class="treemap-cell-value">' + item.value + '</span>';
+      } else if (area > 10) {
+        div.innerHTML = '<span class="treemap-cell-value" style="font-size:0.65rem">' + item.value + '</span>';
+      }
+      tmContainer.appendChild(div);
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// COPILOT CHAT — Leaderboard (page 2)
+// ─────────────────────────────────────────────────────────────
+function renderCopilotChatLeaderboard() {
+  var d = COPILOT_CHAT_DATA;
+  var maxOrgSess = Math.max.apply(null, d.orgLeaderboard.map(function(r) { return r.sessions; }));
+  var maxOrgWsu  = Math.max.apply(null, d.orgLeaderboard.map(function(r) { return r.wsu; }));
+  var maxSfSess  = Math.max.apply(null, d.surfaceLeaderboard.map(function(r) { return r.sessions; }));
+  var maxSfWsu   = Math.max.apply(null, d.surfaceLeaderboard.map(function(r) { return r.wsu; }));
+
+  var html = '<div class="dataset-layout">';
+  html += '<main class="dataset-main">';
+  html += renderCopilotChatSubTabs();
+  html += renderCopilotChatKPIRow();
+
+  // Two tables side by side
+  html += '<div class="lb-tables-row">';
+
+  // Left: Organization leaderboard
+  html += '<div class="lb-table-card">';
+  html += '<div class="chart-title">Unlicensed Chat Usage Leaderboard</div>';
+  html += '<div class="hm-table-wrap"><table class="hm-table">';
+  html += '<thead><tr><th>Organization</th><th class="num">Users</th><th class="num">Total Sessions</th><th class="num">Weekly Sessions Per User</th></tr></thead><tbody>';
+  d.orgLeaderboard.forEach(function(r) {
+    html += '<tr>';
+    html += '<td><span class="expand-icon">\u229E</span>' + (r.org || '') + '</td>';
+    html += '<td class="num">' + r.users + '</td>';
+    html += '<td class="hm" style="' + hmBg(r.sessions, maxOrgSess, 320) + '">' + fmtNum(r.sessions) + '</td>';
+    html += '<td class="hm" style="' + hmBg(r.wsu, maxOrgWsu, 320) + '">' + r.wsu.toFixed(1) + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div></div>';
+
+  // Right: Chat Usage by Surface
+  html += '<div class="lb-table-card">';
+  html += '<div class="chart-title">Chat Usage by Surface</div>';
+  html += '<div class="hm-table-wrap"><table class="hm-table">';
+  html += '<thead><tr><th>Chat Surface</th><th class="num">Users</th><th class="num">Total Sessions</th><th class="num">Weekly Sessions Per User</th></tr></thead><tbody>';
+  d.surfaceLeaderboard.forEach(function(r) {
+    html += '<tr>';
+    html += '<td>' + r.surface + '</td>';
+    html += '<td class="num">' + r.users + '</td>';
+    html += '<td class="hm" style="' + hmBg(r.sessions, maxSfSess, 320) + '">' + fmtNum(r.sessions) + '</td>';
+    html += '<td class="hm" style="' + hmBg(r.wsu, maxSfWsu, 320) + '">' + r.wsu.toFixed(1) + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div></div>';
+
+  html += '</div>'; // lb-tables-row
+  html += '</main>';
+  html += renderCopilotChatFilterPanel();
+  html += '</div>';
+  return html;
+}
+
+// ─────────────────────────────────────────────────────────────
+// COPILOT CHAT — Habitual Formation (page 3)
+// ─────────────────────────────────────────────────────────────
+function renderCopilotChatHabitualFormation() {
+  var d = COPILOT_CHAT_DATA;
+  var cats = d.habitualCategories;
+
+  var html = '<div class="dataset-layout">';
+  html += '<main class="dataset-main">';
+  html += renderCopilotChatSubTabs();
+
+  // Top row: activity table + 4 category cards + donut
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1.2fr;gap:0.6rem;margin-bottom:0.75rem;align-items:stretch">';
+
+  // Left: User Activity table
+  html += '<div class="chart-card" style="padding:0.5rem;overflow:auto">';
+  html += '<div class="chart-title" style="font-size:0.8rem;margin-bottom:0.3rem">Unlicensed Chat User Activity</div>';
+  html += '<table class="hm-table" style="font-size:0.72rem">';
+  html += '<thead><tr><th style="text-align:left">Organization</th><th class="num">Users</th><th class="num">Weekly Sessions Per User</th></tr></thead><tbody>';
+  d.habitualActivity.forEach(function(r) {
+    var maxWsu = 5.5;
+    html += '<tr>';
+    html += '<td>' + r.org + '</td>';
+    html += '<td class="num">' + r.users + '</td>';
+    html += '<td class="hm" style="' + hmBg(r.wsu, maxWsu, 320) + '">' + r.wsu.toFixed(1) + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+
+  // 4 category cards: Infrequent, Moderate, Frequent, Daily
+  var catOrder = [
+    { key: 'infrequent', title: 'Infrequent', bg: '#F0E8F5', color: '#4B2D8E' },
+    { key: 'moderate',   title: 'Moderate',   bg: '#E8D5F0', color: '#7B3FAE' },
+    { key: 'frequent',   title: 'Frequent',   bg: '#D175B7', color: '#fff' },
+    { key: 'daily',      title: 'Daily',      bg: '#4B2D8E', color: '#fff' }
+  ];
+  catOrder.forEach(function(c) {
+    var cat = cats[c.key];
+    var countLabel = cat.count >= 1000 ? Math.round(cat.count / 1000) + 'K' : cat.count;
+    html += '<div class="chart-card" style="padding:0.75rem;background:' + c.bg + ';color:' + c.color + ';display:flex;flex-direction:column;justify-content:space-between;min-height:140px">';
+    html += '<div>';
+    html += '<div style="font-weight:700;font-size:0.85rem;margin-bottom:0.15rem">' + c.title + '</div>';
+    html += '<div style="font-size:0.7rem;opacity:0.8">' + cat.label + ',<br>Last Month</div>';
+    html += '</div>';
+    html += '<div>';
+    html += '<div style="font-size:1.8rem;font-weight:700;line-height:1.1">' + countLabel + '</div>';
+    html += '<div style="font-size:0.75rem;opacity:0.85">Users</div>';
+    html += '</div>';
+    html += '<div>';
+    html += '<div style="font-size:1.5rem;font-weight:700;line-height:1.1">' + cat.pct + '%</div>';
+    html += '<div style="font-size:0.7rem;opacity:0.85">Of Users</div>';
+    html += '</div>';
+    html += '</div>';
+  });
+
+  // Right: Donut chart
+  html += '<div class="chart-card" style="padding:0.5rem">';
+  html += '<div class="chart-title" style="font-size:0.8rem;margin-bottom:0.2rem">% of Users by Habitual Usage</div>';
+  html += '<div style="font-size:0.7rem;color:var(--text-light);margin-bottom:0.25rem">Last Month</div>';
+  html += '<div class="chart-wrap" style="height:160px"><canvas id="chart-cc-habitual-donut"></canvas></div>';
+  html += '</div>';
+
+  html += '</div>'; // top grid
+
+  // Bottom: Stacked bar chart — Active Days
+  html += '<div class="chart-card">';
+  html += '<div class="chart-title">Unlicensed Copilot Chat Active Days</div>';
+  html += '<div class="chart-legend-inline">';
+  html += '<span><span class="dot" style="background:#C0C0C0"></span> 1-5 Active Days</span>';
+  html += '<span><span class="dot" style="background:#D175B7"></span> 6-10 Active Days</span>';
+  html += '<span><span class="dot" style="background:#9B59B6"></span> 11-19 Active Days</span>';
+  html += '<span><span class="dot" style="background:#4B2D8E"></span> 20+ Active Days</span>';
+  html += '</div>';
+  html += '<div class="chart-wrap" style="height:240px"><canvas id="chart-cc-active-days"></canvas></div>';
+  html += '</div>';
+
+  html += '</main>';
+  html += renderCopilotChatFilterPanel();
+  html += '</div>';
+  return html;
+}
+
+function initCopilotChatHabitualCharts() {
+  destroyCharts();
+  var d = COPILOT_CHAT_DATA;
+
+  // ── Donut: % of Users by Habitual Usage ──
+  var ctx1 = document.getElementById('chart-cc-habitual-donut');
+  if (ctx1) {
+    ACTIVE_CHARTS.push(new Chart(ctx1, {
+      type: 'doughnut',
+      data: {
+        labels: d.habitualDonut.labels,
+        datasets: [{
+          data: d.habitualDonut.data,
+          backgroundColor: d.habitualDonut.colors,
+          borderWidth: 2, borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        cutout: '58%',
+        plugins: {
+          legend: { display: false },
+          datalabels: {
+            color: function(ctx) { return ctx.dataIndex < 2 ? '#333' : '#fff'; },
+            font: { size: 9, weight: '600' },
+            formatter: function(v, ctx) {
+              var idx = ctx.dataIndex;
+              var short = ['Infrequent','Mod...','Frequent','Daily'];
+              return short[idx] + ' ' + v + '%';
+            },
+            anchor: 'end', align: 'end', offset: 4
+          }
+        }
+      },
+      plugins: [ChartDataLabels]
+    }));
+  }
+
+  // ── Stacked Bar: Active Days ──
+  var ctx2 = document.getElementById('chart-cc-active-days');
+  if (ctx2) {
+    var ad = d.habitualActiveDays;
+    ACTIVE_CHARTS.push(new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: ad.months,
+        datasets: [
+          { label: '1-5 Active Days',   data: ad.tier1, backgroundColor: '#C0C0C0', datalabels: { display: true, color: '#333', font: { size: 10, weight: '600' }, anchor: 'center' } },
+          { label: '6-10 Active Days',  data: ad.tier2, backgroundColor: '#D175B7', datalabels: { display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 0; }, color: '#fff', font: { size: 10, weight: '600' }, anchor: 'center' } },
+          { label: '11-19 Active Days', data: ad.tier3, backgroundColor: '#9B59B6', datalabels: { display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 0; }, color: '#fff', font: { size: 10, weight: '600' }, anchor: 'center' } },
+          { label: '20+ Active Days',   data: ad.tier4, backgroundColor: '#4B2D8E', datalabels: { display: function(ctx) { return ctx.dataset.data[ctx.dataIndex] > 0; }, color: '#fff', font: { size: 10, weight: '600' }, anchor: 'center' } }
+        ]
+      },
+      plugins: [ChartDataLabels],
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { stacked: true, grid: { display: false }, ticks: { font: { size: 10 } } },
+          y: { stacked: true, grid: { color: '#F0F0F0' }, ticks: { font: { size: 10 } }, beginAtZero: true }
+        }
+      }
+    }));
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// COPILOT CHAT — License Prioritization (page 4)
+// ─────────────────────────────────────────────────────────────
+function renderCopilotChatLicensePrioritization() {
+  var d = COPILOT_CHAT_DATA;
+  var maxRank = Math.max.apply(null, d.licensePriority.map(function(r) { return r.rank; }));
+  var maxWsu  = Math.max.apply(null, d.licensePriority.map(function(r) { return r.wsu; }));
+  var maxWadu = Math.max.apply(null, d.licensePriority.map(function(r) { return r.wadu; }));
+
+  var html = '<div class="dataset-layout">';
+  html += '<main class="dataset-main">';
+  html += renderCopilotChatSubTabs();
+  html += renderCopilotChatKPIRow();
+
+  // Two-column layout: table left, bubble chart right
+  html += '<div class="lb-tables-row">';
+
+  // Left: License Priority Leaderboard
+  html += '<div class="lb-table-card">';
+  html += '<div class="chart-title">Unlicensed Copilot Usage Leaderboard</div>';
+  html += '<div class="hm-table-wrap"><table class="hm-table">';
+  html += '<thead><tr><th>Organization</th><th class="num">License Priority Rank</th><th class="num">Weekly Sessions Per User</th><th class="num">Weekly Active Days Per User</th></tr></thead><tbody>';
+  d.licensePriority.forEach(function(r) {
+    html += '<tr>';
+    html += '<td><span class="expand-icon">\u229E</span>' + (r.org || '') + '</td>';
+    html += '<td class="hm" style="' + hmBg(r.rank, maxRank, 320) + '">' + r.rank + '</td>';
+    html += '<td class="hm" style="' + hmBg(r.wsu, maxWsu, 320) + '">' + r.wsu.toFixed(1) + '</td>';
+    html += '<td class="hm" style="' + hmBg(r.wadu, maxWadu, 320) + '">' + r.wadu.toFixed(1) + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div></div>';
+
+  // Right: Bubble scatter chart
+  html += '<div class="chart-card">';
+  html += '<div class="chart-title">License Priority Matrix - Top Unlicensed Users (Top Right)</div>';
+  html += '<div style="text-align:right;font-size:0.7rem;color:var(--text-light);margin-bottom:0.25rem">High Priority Quadrant</div>';
+  html += '<div class="chart-wrap" style="height:340px"><canvas id="chart-cc-bubble"></canvas></div>';
+  html += '</div>';
+
+  html += '</div>'; // lb-tables-row
+  html += '</main>';
+  html += renderCopilotChatFilterPanel();
+  html += '</div>';
+  return html;
+}
+
+function initCopilotChatLicensePriorityCharts() {
+  destroyCharts();
+  var d = COPILOT_CHAT_DATA;
+
+  var ctx = document.getElementById('chart-cc-bubble');
+  if (!ctx) return;
+
+  var bubbleColors = ['#D175B7','#E8A4D0','#B7AAE0','#9B8DD1','#4B2D8E','#A0A0A0','#808080'];
+  var datasets = d.bubbleChart.map(function(b, i) {
+    return {
+      label: b.org,
+      data: [{ x: b.x, y: b.y, r: b.r }],
+      backgroundColor: bubbleColors[i % bubbleColors.length] + 'AA',
+      borderColor: bubbleColors[i % bubbleColors.length],
+      borderWidth: 1
+    };
+  });
+
+  ACTIVE_CHARTS.push(new Chart(ctx, {
+    type: 'bubble',
+    data: { datasets: datasets },
+    plugins: [ChartDataLabels],
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          display: true,
+          color: '#333',
+          font: { size: 9, weight: '600' },
+          formatter: function(v, ctx) { return ctx.dataset.label; },
+          anchor: 'center', align: 'bottom', offset: 2
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'Median Active Days Per User Per Week (Unlicensed)', color: '#888', font: { size: 10 } },
+          ticks: { color: '#888', font: { size: 9 }, stepSize: 0.05 },
+          grid: { color: '#F0F0F0' },
+          min: 1.40, max: 1.65
+        },
+        y: {
+          title: { display: true, text: 'Median Sessions Per User Per Week (Unlicensed)', color: '#888', font: { size: 10 } },
+          ticks: { color: '#888', font: { size: 9 }, stepSize: 0.02 },
+          grid: { color: '#F0F0F0' },
+          min: 1.88, max: 2.02
+        }
+      }
+    }
+  }));
+
+  // Draw threshold lines via plugin
+  var thresholdPlugin = {
+    id: 'thresholdLines',
+    afterDraw: function(chart) {
+      var xScale = chart.scales.x;
+      var yScale = chart.scales.y;
+      var chartCtx = chart.ctx;
+      // Sessions threshold (horizontal dashed line at y=2.00)
+      var yPx = yScale.getPixelForValue(2.00);
+      chartCtx.save();
+      chartCtx.setLineDash([6, 4]);
+      chartCtx.strokeStyle = '#999';
+      chartCtx.lineWidth = 1;
+      chartCtx.beginPath();
+      chartCtx.moveTo(xScale.left, yPx);
+      chartCtx.lineTo(xScale.right, yPx);
+      chartCtx.stroke();
+      // Consistency threshold (vertical dashed line at x=1.50)
+      var xPx = xScale.getPixelForValue(1.50);
+      chartCtx.beginPath();
+      chartCtx.moveTo(xPx, yScale.top);
+      chartCtx.lineTo(xPx, yScale.bottom);
+      chartCtx.stroke();
+      chartCtx.restore();
+      // Labels
+      chartCtx.font = '9px Segoe UI';
+      chartCtx.fillStyle = '#999';
+      chartCtx.fillText('(Sessions Threshold)', xScale.left + 5, yPx - 5);
+      chartCtx.fillText('(Consistency Threshold)', xPx + 5, yScale.top + 12);
+    }
+  };
+  // Re-create with plugin
+  ACTIVE_CHARTS[ACTIVE_CHARTS.length - 1].destroy();
+  ACTIVE_CHARTS.pop();
+
+  ACTIVE_CHARTS.push(new Chart(ctx, {
+    type: 'bubble',
+    data: { datasets: datasets },
+    plugins: [ChartDataLabels, thresholdPlugin],
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        datalabels: {
+          display: true,
+          color: '#333',
+          font: { size: 9, weight: '600' },
+          formatter: function(v, ctx) { return ctx.dataset.label; },
+          anchor: 'center', align: 'bottom', offset: 2
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'Median Active Days Per User Per Week (Unlicensed)', color: '#888', font: { size: 10 } },
+          ticks: { color: '#888', font: { size: 9 }, stepSize: 0.05 },
+          grid: { color: '#F0F0F0' },
+          min: 1.40, max: 1.65
+        },
+        y: {
+          title: { display: true, text: 'Median Sessions Per User Per Week (Unlicensed)', color: '#888', font: { size: 10 } },
+          ticks: { color: '#888', font: { size: 9 }, stepSize: 0.02 },
+          grid: { color: '#F0F0F0' },
+          min: 1.88, max: 2.02
+        }
+      }
+    }
+  }));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COPILOT OVERALL — DATA & RENDERERS
+// ═══════════════════════════════════════════════════════════════
+
+function renderCopilotOverallSubTabs() {
+  var ds = DATASETS['copilot-overall'];
+  var html = '<div class="sub-tabs">';
+  for (var i = 0; i < ds.views.length; i++) {
+    var cls = 'sub-tab' + (STATE.subView === i ? ' active' : '');
+    html += '<button class="' + cls + '" onclick="navigate(\'copilot-overall\',' + i + ')">' + ds.views[i] + '</button>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderCopilotOverallFilterPanel() {
+  var html = '<aside class="filter-panel">';
+  html += '<div class="filter-header">Filters</div>';
+  html += '<div class="filter-section">';
+  html += '<label class="filter-label">Date</label>';
+  html += '<div class="m365-date-wrap"><input class="filter-date m365-date-input" type="date" value="2025-03-01" /></div>';
+  html += '<div class="m365-date-wrap" style="margin-top:0.25rem"><input class="filter-date m365-date-input" type="date" value="2025-06-06" /></div>';
+  html += '</div>';
+  html += '<div class="filter-section"><label class="filter-label">Organization</label><select class="filter-select"><option>All</option></select></div>';
+  html += '<div class="filter-section"><label class="filter-label">Chat Usage Rank</label><select class="filter-select"><option>All</option></select></div>';
+  html += '<div class="filter-section"><label class="filter-label">M365 Copilot Usage Ra...</label><select class="filter-select"><option>All</option></select></div>';
+  html += '<div class="filter-section"><label class="filter-label">Agent Usage Rank</label><select class="filter-select"><option>All</option></select></div>';
+  html += '</aside>';
+  return html;
+}
+
+// ─────────────────────────────────────────────────────────────
+// COPILOT OVERALL — Combined Trends (page 1)
+// ─────────────────────────────────────────────────────────────
+function renderCopilotOverallCombinedTrends() {
+  var html = '<div class="dataset-layout">';
+  html += '<main class="dataset-main">';
+  html += renderCopilotOverallSubTabs();
+
+  // Layout: left KPI column + right chart area
+  html += '<div style="display:grid;grid-template-columns:160px 1fr;gap:0.75rem;margin-bottom:0.75rem">';
+
+  // Left: 3 stacked KPI cards
+  html += '<div style="display:flex;flex-direction:column;gap:0.5rem">';
+  html += '<div class="ds-kpi-card" style="flex:1;padding:0.75rem"><div class="ds-kpi-value" style="font-size:1.6rem">180</div><div class="ds-kpi-label">Agent - Active Users</div></div>';
+  html += '<div class="ds-kpi-card" style="flex:1;padding:0.75rem"><div class="ds-kpi-value" style="font-size:1.6rem">2,585</div><div class="ds-kpi-label">Unlicensed Chat - Active Users</div></div>';
+  html += '<div class="ds-kpi-card" style="flex:1;padding:0.75rem"><div class="ds-kpi-value" style="font-size:1.6rem">1,616</div><div class="ds-kpi-label">M365 Copilot - Active Users</div></div>';
+  html += '</div>';
+
+  // Right: Multi-line chart
+  html += '<div class="chart-card">';
+  html += '<div class="chart-title">Average Sessions Per User Over Time (No Duplication)</div>';
+  html += '<div class="chart-legend-inline" style="flex-wrap:wrap">';
+  html += '<span><span class="dot" style="background:#D175B7"></span> Agent Sessions Per User</span>';
+  html += '<span><span class="dot" style="background:#E8A4D0"></span> Unlicensed Chat Sessions Per User</span>';
+  html += '<span><span class="dot" style="background:#1976D2"></span> M365 Copilot Session Per User</span>';
+  html += '</div>';
+  html += '<div class="chart-wrap" style="height:240px"><canvas id="chart-co-trends"></canvas></div>';
+  html += '</div>';
+
+  html += '</div>';
+
+  // Bottom row: stacked bar + bubble chart
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">';
+
+  // Left: Active Users stacked bar
+  html += '<div class="chart-card">';
+  html += '<div class="chart-title">Active Users</div>';
+  html += '<div class="chart-legend-inline" style="flex-wrap:wrap">';
+  html += '<span><span class="dot" style="background:#D175B7"></span> Unlicensed Copilot Chat Users</span>';
+  html += '<span><span class="dot" style="background:#42A5F5"></span> M365 Copilot Users</span>';
+  html += '<span><span class="dot" style="background:#4B2D8E"></span> Agent Users</span>';
+  html += '</div>';
+  html += '<div class="chart-wrap" style="height:260px"><canvas id="chart-co-users"></canvas></div>';
+  html += '</div>';
+
+  // Right: Bubble chart with tab bar
+  html += '<div class="chart-card" style="padding:0">';
+  // Inline tabs
+  html += '<div style="display:flex;border-bottom:1px solid var(--border);font-size:0.8rem">';
+  html += '<button class="sub-tab active" style="border:none;background:none;padding:0.5rem 1rem;font-weight:600;border-bottom:2px solid var(--purple-600);color:var(--purple-600);cursor:pointer">Agents</button>';
+  html += '<button class="sub-tab" style="border:none;background:none;padding:0.5rem 1rem;color:var(--text-secondary);cursor:pointer">Unlicensed Copilot Chat</button>';
+  html += '<button class="sub-tab" style="border:none;background:none;padding:0.5rem 1rem;color:var(--text-secondary);cursor:pointer">M365 Copilot</button>';
+  html += '</div>';
+  html += '<div style="padding:0.75rem">';
+  html += '<div class="chart-title">Usage Frequency and Intensity</div>';
+  html += '<div class="chart-wrap" style="height:240px"><canvas id="chart-co-bubble"></canvas></div>';
+  html += '</div>';
+  html += '</div>';
+
+  html += '</div>';
+
+  html += '</main>';
+  html += renderCopilotOverallFilterPanel();
+  html += '</div>';
+  return html;
+}
+
+function initCopilotOverallCombinedTrendsCharts() {
+  destroyCharts();
+
+  // ── Chart 1: Multi-line sessions per user over time ──
+  var ctx1 = document.getElementById('chart-co-trends');
+  if (ctx1) {
+    var weeks = ['W1','W2','W3','W4','W5','W6','W7','W8','W9','W10','W11','W12','W13','W14','W15','W16'];
+    var agentSPU = [2.0, 2.4, 4.5, 4.9, 4.1, 3.2, 4.0, 4.7, 4.4, 4.3, 6.0, 3.9, 5.3, 5.4, 6.0, 5.3];
+    var chatSPU  = [2.0, 2.8, 4.1, 4.3, 3.8, 4.0, 4.3, 4.1, 4.2, 3.0, 3.9, 4.2, 2.6, 4.9, 4.9, 2.8];
+    var m365SPU  = [2.0, 2.4, 4.1, 4.3, 3.8, 4.0, 4.3, 4.2, 4.2, 3.0, 3.9, 3.9, 4.2, 5.3, 5.4, 5.3];
+    ACTIVE_CHARTS.push(new Chart(ctx1, {
+      type: 'line',
+      data: {
+        labels: weeks,
+        datasets: [{
+          label: 'Agent Sessions Per User',
+          data: agentSPU,
+          borderColor: '#D175B7', backgroundColor: 'transparent',
+          pointBackgroundColor: '#D175B7', pointRadius: 4, borderWidth: 2, tension: 0.35,
+          datalabels: { display: true, align: 'top', offset: 6, color: '#D175B7', font: { size: 9, weight: '600' } }
+        }, {
+          label: 'Unlicensed Chat Sessions Per User',
+          data: chatSPU,
+          borderColor: '#E8A4D0', backgroundColor: 'transparent',
+          pointBackgroundColor: '#E8A4D0', pointRadius: 3, borderWidth: 2, tension: 0.35,
+          borderDash: [5, 3],
+          datalabels: { display: true, align: 'bottom', offset: 6, color: '#C07DAA', font: { size: 9, weight: '600' } }
+        }, {
+          label: 'M365 Copilot Session Per User',
+          data: m365SPU,
+          borderColor: '#1976D2', backgroundColor: 'transparent',
+          pointBackgroundColor: '#1976D2', pointRadius: 4, borderWidth: 2.5, tension: 0.35,
+          datalabels: { display: false }
+        }]
+      },
+      plugins: [ChartDataLabels],
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#888', font: { size: 9 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 },
+               grid: { color: '#F0F0F0' },
+               afterTickToLabelConversion: function(scale) {
+                 var monthMap = { 0: 'Mar 2025', 4: 'Apr 2025', 8: 'May 2025', 12: 'Jun 2025' };
+                 scale.ticks.forEach(function(t, i) { t.label = monthMap[i] || ''; });
+               }
+             },
+          y: { title: { display: true, text: 'Average Actions', color: '#888', font: { size: 10 } },
+               ticks: { color: '#888', font: { size: 9 } }, grid: { color: '#F0F0F0' },
+               min: 0, suggestedMax: 7 }
+        }
+      }
+    }));
+  }
+
+  // ── Chart 2: Active Users stacked bar by dept ──
+  var ctx2 = document.getElementById('chart-co-users');
+  if (ctx2) {
+    var depts = ['Finance','HR','IT','Legal','Marketing','Operations','Sales','Support'];
+    var chatUsers = [276, 324, 291, 314, 310, 325, 302, 317];
+    var m365Users = [194, 209, 218, 218, 213, 199, 184, 181];
+    var agentUsers = [25, 25, 26, 14, 20, 21, 26, 23];
+    ACTIVE_CHARTS.push(new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: depts,
+        datasets: [
+          { label: 'Unlicensed Copilot Chat Users', data: chatUsers, backgroundColor: '#D175B7',
+            datalabels: { display: true, color: '#fff', font: { size: 9, weight: '600' }, anchor: 'center' } },
+          { label: 'M365 Copilot Users', data: m365Users, backgroundColor: '#42A5F5',
+            datalabels: { display: true, color: '#fff', font: { size: 9, weight: '600' }, anchor: 'center' } },
+          { label: 'Agent Users', data: agentUsers, backgroundColor: '#4B2D8E',
+            datalabels: { display: true, color: '#fff', font: { size: 9, weight: '600' }, anchor: 'center' } }
+        ]
+      },
+      plugins: [ChartDataLabels],
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { stacked: true, grid: { display: false }, ticks: { font: { size: 8 }, maxRotation: 45, minRotation: 25 } },
+          y: { stacked: true, title: { display: true, text: 'Active Users', color: '#888', font: { size: 10 } },
+               grid: { color: '#F0F0F0' }, ticks: { font: { size: 9 } }, beginAtZero: true }
+        }
+      }
+    }));
+  }
+
+  // ── Chart 3: Bubble — Usage Frequency and Intensity ──
+  var ctx3 = document.getElementById('chart-co-bubble');
+  if (ctx3) {
+    var bubbles = [
+      { org: 'Marketing', x: 2.5, y: 7, r: 12 },
+      { org: 'Support',   x: 2.8, y: 7.5, r: 10 },
+      { org: 'Finance',   x: 3.5, y: 10, r: 14 },
+      { org: 'IT',        x: 4, y: 7, r: 11 },
+      { org: 'HR',        x: 4.5, y: 9, r: 13 },
+      { org: 'Sales',     x: 5.5, y: 10, r: 14 },
+      { org: 'Operations', x: 6.5, y: 20, r: 18 },
+      { org: 'Legal',     x: 6.2, y: 16, r: 16 }
+    ];
+    var purpleScale = ['#E8A4D0','#D175B7','#B060A0','#9B59B6','#8B47A5','#7B3FAE','#5C3D99','#4B2D8E'];
+    var datasets = bubbles.map(function(b, i) {
+      return {
+        label: b.org,
+        data: [{ x: b.x, y: b.y, r: b.r }],
+        backgroundColor: purpleScale[i % purpleScale.length] + 'BB',
+        borderColor: purpleScale[i % purpleScale.length],
+        borderWidth: 1
+      };
+    });
+    ACTIVE_CHARTS.push(new Chart(ctx3, {
+      type: 'bubble',
+      data: { datasets: datasets },
+      plugins: [ChartDataLabels],
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          datalabels: {
+            display: true, color: '#333', font: { size: 9, weight: '600' },
+            formatter: function(v, ctx) { return ctx.dataset.label; },
+            anchor: 'center', align: 'bottom', offset: 2
+          }
+        },
+        scales: {
+          x: { title: { display: true, text: 'Active Days Per User', color: '#888', font: { size: 10 } },
+               ticks: { color: '#888', font: { size: 9 } }, grid: { color: '#F0F0F0' }, min: 1, max: 8 },
+          y: { title: { display: true, text: 'Sessions Per User', color: '#888', font: { size: 10 } },
+               ticks: { color: '#888', font: { size: 9 } }, grid: { color: '#F0F0F0' }, min: 0, suggestedMax: 25 }
+        }
+      }
+    }));
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// COPILOT OVERALL — Combined Leaderboard (page 2)
+// ─────────────────────────────────────────────────────────────
+function renderCopilotOverallCombinedLeaderboard() {
+  var licensedData = [
+    { org: 'Total',      m365: 1616, spu: 21.3, pctAgents: '4%', agentSPU: 8.7, isTotal: true },
+    { org: 'Finance',    m365: 194,  spu: 27.0, pctAgents: '3%', agentSPU: 7.5, isTotal: false },
+    { org: 'HR',         m365: 209,  spu: 19.4, pctAgents: '7%', agentSPU: 5.1, isTotal: false },
+    { org: 'IT',         m365: 218,  spu: 19.8, pctAgents: '5%', agentSPU: 7.2, isTotal: false },
+    { org: 'Legal',      m365: 218,  spu: 19.9, pctAgents: '2%', agentSPU: 12.8, isTotal: false },
+    { org: 'Marketing',  m365: 213,  spu: 17.5, pctAgents: '4%', agentSPU: 6.1, isTotal: false },
+    { org: 'Operations', m365: 199,  spu: 28.1, pctAgents: '4%', agentSPU: 14.5, isTotal: false },
+    { org: 'Sales',      m365: 184,  spu: 21.9, pctAgents: '5%', agentSPU: 16.9, isTotal: false },
+    { org: 'Support',    m365: 181,  spu: 17.7, pctAgents: '5%', agentSPU: 3.7, isTotal: false }
+  ];
+  var unlicensedData = [
+    { org: 'Total',      users: 2585, chatSPU: 22.8, pctAgents: '4%', agentSPU: 12.7, isTotal: true },
+    { org: 'Operations', users: 325,  chatSPU: 22.4, pctAgents: '4%', agentSPU: 23.5, isTotal: false },
+    { org: 'HR',         users: 324,  chatSPU: 20.7, pctAgents: '3%', agentSPU: 14.8, isTotal: false },
+    { org: 'Support',    users: 317,  chatSPU: 23.7, pctAgents: '4%', agentSPU: 8.5, isTotal: false },
+    { org: 'Legal',      users: 314,  chatSPU: 23.1, pctAgents: '3%', agentSPU: 23.1, isTotal: false },
+    { org: 'Marketing',  users: 310,  chatSPU: 18.5, pctAgents: '4%', agentSPU: 4.3, isTotal: false },
+    { org: 'Sales',      users: 302,  chatSPU: 20.8, pctAgents: '6%', agentSPU: 13.1, isTotal: false },
+    { org: 'IT',         users: 291,  chatSPU: 22.6, pctAgents: '5%', agentSPU: 7.9, isTotal: false },
+    { org: 'Finance',    users: 276,  chatSPU: 34.0, pctAgents: '7%', agentSPU: 11.2, isTotal: false },
+    { org: '',           users: 126,  chatSPU: 16.6, pctAgents: '',   agentSPU: 0, isTotal: false }
+  ];
+
+  // Compute heatmap maxes (exclude totals)
+  var licRows = licensedData.filter(function(r) { return !r.isTotal; });
+  var maxLicM365  = Math.max.apply(null, licRows.map(function(r) { return r.m365; }));
+  var maxLicSPU   = Math.max.apply(null, licRows.map(function(r) { return r.spu; }));
+  var maxLicAgent = Math.max.apply(null, licRows.map(function(r) { return r.agentSPU; }));
+  var unlicRows = unlicensedData.filter(function(r) { return !r.isTotal; });
+  var maxUnlicUsers = Math.max.apply(null, unlicRows.map(function(r) { return r.users; }));
+  var maxUnlicChat  = Math.max.apply(null, unlicRows.map(function(r) { return r.chatSPU; }));
+  var maxUnlicAgent = Math.max.apply(null, unlicRows.map(function(r) { return r.agentSPU; }));
+
+  var html = '<div class="dataset-layout">';
+  html += '<main class="dataset-main">';
+  html += renderCopilotOverallSubTabs();
+
+  // KPI Row — 6 cards
+  html += '<div class="ds-kpi-row" style="grid-template-columns:repeat(6,1fr);margin-bottom:0.75rem">';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">180</div><div class="ds-kpi-label">Agent Users</div></div>';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">3.60</div><div class="ds-kpi-label">Weekly Agent Sessions Per User</div></div>';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">2,585</div><div class="ds-kpi-label">Unlicensed Chat Users</div></div>';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">3.3</div><div class="ds-kpi-label">Weekly Unlicensed Chat Sessions Per User</div></div>';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">1,616</div><div class="ds-kpi-label">M365 Copilot Users</div></div>';
+  html += '<div class="ds-kpi-card"><div class="ds-kpi-value">3.1</div><div class="ds-kpi-label">Weekly Copilot Session Per User</div></div>';
+  html += '</div>';
+
+  // Two tables
+  html += '<div class="lb-tables-row">';
+
+  // Left: Licensed Usage
+  html += '<div class="lb-table-card">';
+  html += '<div class="chart-title">Licensed Usage</div>';
+  html += '<div class="hm-table-wrap"><table class="hm-table">';
+  html += '<thead><tr><th>Organization</th><th class="num">M365 Copilot Users</th><th class="num">Copilot Sessions Per User</th><th class="num">% that are using Agents</th><th class="num">Agent Sessions Per User</th></tr></thead><tbody>';
+  licensedData.forEach(function(r) {
+    var cls = r.isTotal ? ' class="m365-total-row"' : '';
+    var m365Style   = r.isTotal ? '' : hmBg(r.m365, maxLicM365, 208);
+    var spuStyle    = r.isTotal ? '' : hmBg(r.spu, maxLicSPU, 208);
+    var pctStyle    = r.isTotal ? '' : hmBg(parseFloat(r.pctAgents), 7, 265);
+    var agentStyle  = r.isTotal ? '' : hmBg(r.agentSPU, maxLicAgent, 265);
+    html += '<tr' + cls + '>';
+    html += '<td>' + (r.isTotal ? '<strong>' + r.org + '</strong>' : '<span class="expand-icon">\u229E</span>' + r.org) + '</td>';
+    html += '<td class="hm" style="' + m365Style + '">' + fmtNum(r.m365) + '</td>';
+    html += '<td class="hm" style="' + spuStyle + '">' + r.spu.toFixed(1) + '</td>';
+    html += '<td class="hm" style="' + pctStyle + '">' + r.pctAgents + '</td>';
+    html += '<td class="hm" style="' + agentStyle + '">' + r.agentSPU.toFixed(1) + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div></div>';
+
+  // Right: Unlicensed Usage
+  html += '<div class="lb-table-card">';
+  html += '<div class="chart-title">Unlicensed Usage</div>';
+  html += '<div class="hm-table-wrap"><table class="hm-table">';
+  html += '<thead><tr><th>Organization</th><th class="num">Unlicensed Copilot Chat Users</th><th class="num">Chat Sessions Per User</th><th class="num">% that are using Agents</th><th class="num">Agent Sessions Per User</th></tr></thead><tbody>';
+  unlicensedData.forEach(function(r) {
+    var cls = r.isTotal ? ' class="m365-total-row"' : '';
+    var usersStyle = r.isTotal ? '' : hmBg(r.users, maxUnlicUsers, 265);
+    var chatStyle  = r.isTotal ? '' : hmBg(r.chatSPU, maxUnlicChat, 265);
+    var pctStyle   = (r.isTotal || !r.pctAgents) ? '' : hmBg(parseFloat(r.pctAgents), 7, 265);
+    var agentStyle = (r.isTotal || r.agentSPU === 0) ? '' : hmBg(r.agentSPU, maxUnlicAgent, 265);
+    html += '<tr' + cls + '>';
+    html += '<td>' + (r.isTotal ? '<strong>' + r.org + '</strong>' : '<span class="expand-icon">\u229E</span>' + (r.org || '')) + '</td>';
+    html += '<td class="hm" style="' + usersStyle + '">' + fmtNum(r.users) + '</td>';
+    html += '<td class="hm" style="' + chatStyle + '">' + r.chatSPU.toFixed(1) + '</td>';
+    html += '<td class="hm" style="' + pctStyle + '">' + r.pctAgents + '</td>';
+    html += '<td class="hm" style="' + agentStyle + '">' + (r.agentSPU ? r.agentSPU.toFixed(1) : '') + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div></div>';
+
+  html += '</div>'; // lb-tables-row
+  html += '</main>';
+  html += renderCopilotOverallFilterPanel();
   html += '</div>';
   return html;
 }
@@ -1435,7 +4168,6 @@ function renderDatasetView() {
   if (!ds) { STATE.view = 'hub'; return renderHub(); }
 
   var charts = ds.chartTitles[STATE.subView] || ['Chart 1', 'Chart 2', 'Chart 3', 'Chart 4'];
-  var seg = SEGMENTS[STATE.segment];
 
   var html = '<div class="dataset-layout">';
   html += '<main class="dataset-main">';
@@ -1450,8 +4182,8 @@ function renderDatasetView() {
     html += '</div>';
   }
 
-  // Segment context label
-  html += '<div style="font-size:0.75rem;color:' + seg.color + ';font-weight:600;margin-bottom:0.5rem;">' + seg.label + ' \u2014 ' + ds.title;
+  // Category context label
+  html += '<div style="font-size:0.75rem;color:#4B2D8E;font-weight:600;margin-bottom:0.5rem;">' + ds.title;
   if (ds.views.length > 1) {
     html += ' \u203A ' + ds.views[STATE.subView];
   }
@@ -1481,36 +4213,15 @@ function renderDatasetView() {
 
 function renderDatasetFilters() {
   return '<div class="filter-header">Filters</div>' +
-
     '<div class="filter-section">' +
-      '<div class="filter-group">' +
-        '<label class="filter-label">Date Range</label>' +
-        '<input type="date" class="filter-date" value="2025-03-01" />' +
-        '<input type="date" class="filter-date" value="2025-06-06" style="margin-top:0.25rem" />' +
-      '</div>' +
+      '<label class="filter-label">Date</label>' +
+      '<div class="m365-date-wrap"><input class="filter-date m365-date-input" type="date" value="2025-03-01" /></div>' +
+      '<div class="m365-date-wrap" style="margin-top:0.25rem"><input class="filter-date m365-date-input" type="date" value="2025-06-06" /></div>' +
     '</div>' +
-
-    '<div class="filter-section">' +
-      '<div class="filter-group">' +
-        '<label class="filter-label">Organization</label>' +
-        '<select class="filter-select"><option>All</option></select>' +
-      '</div>' +
-      '<div class="filter-group">' +
-        '<label class="filter-label">Department</label>' +
-        '<select class="filter-select"><option>All</option></select>' +
-      '</div>' +
-    '</div>' +
-
-    '<div class="filter-section">' +
-      '<div class="filter-group">' +
-        '<label class="filter-label">Usage Rank</label>' +
-        '<select class="filter-select"><option>All</option></select>' +
-      '</div>' +
-      '<div class="filter-group">' +
-        '<label class="filter-label">License Status</label>' +
-        '<select class="filter-select"><option>All</option></select>' +
-      '</div>' +
-    '</div>';
+    '<div class="filter-section"><label class="filter-label">Organization</label><select class="filter-select"><option>All</option></select></div>' +
+    '<div class="filter-section"><label class="filter-label">Department</label><select class="filter-select"><option>All</option></select></div>' +
+    '<div class="filter-section"><label class="filter-label">Usage Rank</label><select class="filter-select"><option>All</option></select></div>' +
+    '<div class="filter-section"><label class="filter-label">License Status</label><select class="filter-select"><option>All</option></select></div>';
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1536,9 +4247,17 @@ async function init() {
   } catch(err) {
     console.warn('Initial data fetch failed:', err);
   }
-  STATE.view = 'hub';
-  STATE.segment = 'combined';
-  STATE.subView = 0;
+  var qp = new URLSearchParams(window.location.search);
+  var forcedView = qp.get('view');
+  var forcedSub = parseInt(qp.get('sub') || '0', 10);
+  STATE.segment = 'overall';
+  if (forcedView && DATASETS[forcedView]) {
+    STATE.view = forcedView;
+    STATE.subView = isNaN(forcedSub) ? 0 : Math.max(0, forcedSub);
+  } else {
+    STATE.view = 'hub';
+    STATE.subView = 0;
+  }
   renderApp();
   trackEvent('DashboardRendered', { version: 'hub-v1' });
 }
